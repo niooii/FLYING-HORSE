@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GameWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderTesting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="globals\BossGlobals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="globals\Constants.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Utility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="globals\global.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\Timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="globals\Config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Entities\Boss.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Entities\Entity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Entities\Player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Entities\Projectile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Geometry\Dodecahedron.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Geometry\Polyhedron.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="globals\Textures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="C:\Users\hewit\Downloads\lazy.ttf">
+      <Filter>Resource Files</Filter>
+    </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Vector2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GameWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TextRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="globals\BossGlobals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="globals\Constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Utility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="globals\global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="globals\Config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Entities\Boss.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Entities\Entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Entities\Player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Entities\Projectile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Geometry\Dodecahedron.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Geometry\Polyhedron.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="globals\Textures.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
