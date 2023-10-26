@@ -353,7 +353,7 @@ void GameWindow::handleKeyInput(const SDL_Keycode& sym)
 	
 }
 
-//renders whole fight im too lazy stfu
+//renders whole fight
 void GameWindow::renderBoss()
 {
 	//kidnap user
