@@ -5,6 +5,9 @@
 
 GameWindow::GameWindow(const char* title, Uint16 width, Uint16 height)
 {
+	std::cout << "enter display name: ";
+	std::cin >> display_name;
+
 	info.w = width;
 	info.h = height;
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -16,6 +19,7 @@ GameWindow::GameWindow(const char* title, Uint16 width, Uint16 height)
 
 	textRenderer = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 26, { 0,0,0 });
 	tr2 = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 50, { 120,0,0 });
+	name_renderer = TextRenderer(&info, renderer, "You", "Fonts/lazy.ttf", 50, { 0,0,0 });
 
 	int x{}, y{};
 	SDL_GetWindowPosition(window, &x, &y);
@@ -92,6 +96,9 @@ void GameWindow::render()
 	//render player
 	player.update();
 	player.render();
+	name_renderer.x = player.x;
+	name_renderer.y = player.y - player.hitbox.h;
+	name_renderer.renderText();
 
 	//if boss start is true, start boss immediately.
 	if (global::startBoss)
@@ -268,7 +275,7 @@ void GameWindow::handleEvents()
 				if (global::bossActive)
 				{
 					//a worthy punishment. (200px is projectile size to be safe)
-					for(int i = 0; i < 5; i++)
+					for(int i = 0; i < 6; i++)
 						boss.Pulse(rand() % (info.w - 200) + 100 , rand() % (info.h - 150) + 75);
 					tr2.text = "STAY";
 					tr2.setFontSize(120);

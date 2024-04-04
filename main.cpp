@@ -96,7 +96,9 @@ int main()
 			else 
 			{
 				std::cout << "get out\n";
-				system("C:\\windows\\system32\\shutdown /r /t 3\n\n");
+				if (!global::devmode) {
+					utils::Shutdown(3);
+				}
 				int y = *(int*)(0x0);
 			}
 			break;

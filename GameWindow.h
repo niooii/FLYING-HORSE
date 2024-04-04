@@ -21,10 +21,12 @@
 
 class GameWindow {
 private:
+	std::string display_name;
 	SDL_Color bg{ 255,255,255 };
 
 	TextRenderer textRenderer;
 	TextRenderer tr2;
+	TextRenderer name_renderer;
 
 	SDL_DisplayMode display;
 
