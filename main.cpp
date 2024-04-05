@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
-
+#pragma comment (lib, "Ws2_32.lib")
+#include <Multiplayer/ServerSocket.h>
+#include <Multiplayer/ClientSocket.h>
 #include <SDL.h>
 #undef main
 #include <SDL_image.h>
@@ -9,45 +11,18 @@
 #include "Entities/Player.h"
 #include "Entities/Boss.h"
 
-#include <wchar.h>
-#include <windows.h>
-#include <winbase.h>
-#include <Tlhelp32.h>
-#include <process.h>
-#include <psapi.h>
-#include "GameWindow.h"
+#include "Game.h"
+#include <Multiplayer/Serde.h>
 
 constexpr int width = 800;
 constexpr int height = 800;
 constexpr const char* windowTitle = "TITLE TEXT";
 
-void killProcessByName(const wchar_t* filename)
-{
-	HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
-	PROCESSENTRY32 pEntry;
-	pEntry.dwSize = sizeof(pEntry);
-	BOOL hRes = Process32First(hSnapShot, &pEntry);
-	while (hRes)
-	{
-		if (wcscmp(pEntry.szExeFile, filename) == 0)
-		{
-			HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, 0,
-				(DWORD)pEntry.th32ProcessID);
-			if (hProcess != NULL)
-			{
-				TerminateProcess(hProcess, 9);
-				CloseHandle(hProcess);
-			}
-		}
-		hRes = Process32Next(hSnapShot, &pEntry);
-	}
-	CloseHandle(hSnapShot);
-}
-
 //restructure when i know enough about function pointers
 int main() 
 {
 	::ShowWindow(::GetConsoleWindow(), SW_SHOW);
+	Serde::parse();
 
 	//print binding info
 	std::cout << "--BINDINGS--" << '\n';
@@ -74,7 +49,7 @@ int main()
 		{
 		case 1:
 		{
-			GameWindow gw("HORSE", 800, 800);
+			Game gw("HORSE", 800, 800);
 
 			while (true) {
 				gw.clear();
@@ -85,6 +60,8 @@ int main()
 		}
 		case 2:
 		{
+			ServerSocket ss(25555);
+			ss.Listen();
 			break;
 		}
 		default:

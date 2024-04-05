@@ -1,3 +1,5 @@
+#pragma once
+
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include "Entities/Entity.h"
@@ -16,10 +18,9 @@
 #include "globals/Textures.h"
 #include "Geometry/Dodecahedron.h"
 #include "Utility/Timer.h"
+#include <Multiplayer/ClientSocket.h>
 
-#pragma once
-
-class GameWindow {
+class Game {
 private:
 	std::string display_name;
 	SDL_Color bg{ 255,255,255 };
@@ -51,6 +52,8 @@ private:
 
 	Dodecahedron d{nullptr, nullptr};
 
+	ClientSocket socket{};
+
 public:
 	SDL_Window* window;
 	SDL_Renderer* renderer;
@@ -63,7 +66,7 @@ public:
 	std::vector<Projectile> projectiles;
 	int mouseX{}, mouseY{};
 	
-	GameWindow(const char* title, Uint16 width, Uint16 height);
+	Game(const char* title, Uint16 width, Uint16 height);
 	void addEntity(Projectile& entity);
 	//void addEntity(Player& player);
 	//void addEntity(Boss& boss);

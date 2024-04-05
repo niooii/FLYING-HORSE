@@ -1,12 +1,12 @@
-#include "GameWindow.h"
-#include <wchar.h>
-#include <SDL.h>
+#include "Game.h"
 
-
-GameWindow::GameWindow(const char* title, Uint16 width, Uint16 height)
+Game::Game(const char* title, Uint16 width, Uint16 height)
 {
 	std::cout << "enter display name: ";
 	std::cin >> display_name;
+
+	socket.ConnectTo("127.0.0.1", 25555);
+	socket.SendString(display_name);
 
 	info.w = width;
 	info.h = height;
@@ -41,7 +41,7 @@ GameWindow::GameWindow(const char* title, Uint16 width, Uint16 height)
 	boss = Boss(textures::bossIdle, renderer, &info, 200, 200);
 }
 
-void GameWindow::addEntity(Projectile& entity)
+void Game::addEntity(Projectile& entity)
 {
 	projectiles.emplace_back(entity);
 	if (projectiles.size() > constants::entityLimit)
@@ -57,18 +57,18 @@ void GameWindow::addEntity(Projectile& entity)
 	}
 }
 
-//void GameWindow::addEntity(Player& player)
+//void Game::addEntity(Player& player)
 //{
 //	players.emplace_back(player);
 //}
 //
-//void GameWindow::addEntity(Boss& boss)
+//void Game::addEntity(Boss& boss)
 //{
 //	bosses.emplace_back(boss);
 //}
 
 //split into render and update function later.
-void GameWindow::render()
+void Game::render()
 {
 	if (global::devmode && !global::IInteractable)
 		global::IInteractable = true;
@@ -189,12 +189,12 @@ void GameWindow::render()
 	SDL_RenderPresent(renderer);
 }
 
-double GameWindow::percentVariance(double now, double old)
+double Game::percentVariance(double now, double old)
 {
 	return (now / old) * 100;
 }
 
-void GameWindow::handleRawInput()
+void Game::handleRawInput()
 {
 	//shoot projectiles
 	int mouseX{}, mouseY{};
@@ -244,7 +244,7 @@ void GameWindow::handleRawInput()
 	}
 }
 
-void GameWindow::handleEvents()
+void Game::handleEvents()
 {
 	handleRawInput();
 	while (SDL_PollEvent(&event)) 
@@ -306,7 +306,7 @@ void GameWindow::handleEvents()
 	}
 }
 
-void GameWindow::handleKeyInput(const SDL_Keycode& sym)
+void Game::handleKeyInput(const SDL_Keycode& sym)
 {
 	if (global::IInteracted)
 		return;
@@ -361,7 +361,7 @@ void GameWindow::handleKeyInput(const SDL_Keycode& sym)
 }
 
 //renders whole fight
-void GameWindow::renderBoss()
+void Game::renderBoss()
 {
 	//kidnap user
 	SDL_RaiseWindow(window);
@@ -424,7 +424,7 @@ void GameWindow::renderBoss()
 	SDL_RenderPresent(renderer);
 }
 
-void GameWindow::quit()
+void Game::quit()
 {
 	if (global::bossActive)
 	{
@@ -526,7 +526,7 @@ void GameWindow::quit()
 	}
 }
 
-void GameWindow::clear()
+void Game::clear()
 {
 	//CLEAR rendering
 	SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, 255);
@@ -534,7 +534,7 @@ void GameWindow::clear()
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }
 
-void GameWindow::startBoss()
+void Game::startBoss()
 {
 	global::bossActive = true;
 	config::recoil = false;
@@ -562,7 +562,7 @@ void GameWindow::startBoss()
 	}
 }
 
-void GameWindow::handleBossCollisions()
+void Game::handleBossCollisions()
 {
 	//handle bossfight collisions
 	for (Projectile& p : projectiles)

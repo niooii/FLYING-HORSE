@@ -141,6 +141,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Multiplayer\ClientSocket.cpp" />
     <ClCompile Include="Entities\Boss.cpp" />
     <ClCompile Include="Entities\Entity.cpp" />
     <ClCompile Include="Entities\Player.cpp" />
@@ -154,7 +155,9 @@
     <ClCompile Include="globals\Textures.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RenderTesting.cpp" />
-    <ClCompile Include="GameWindow.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Multiplayer\ServerSocket.cpp" />
+    <ClCompile Include="Multiplayer\Server.cpp" />
     <ClCompile Include="TextRenderer.cpp" />
     <ClCompile Include="Utility\Timer.cpp" />
     <ClCompile Include="Utility\Utility.cpp" />
@@ -165,6 +168,7 @@
     <Font Include="C:\Users\hewit\Downloads\lazy.ttf" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Multiplayer\ClientSocket.h" />
     <ClInclude Include="Entities\Boss.h" />
     <ClInclude Include="Entities\Entity.h" />
     <ClInclude Include="Entities\Player.h" />
@@ -176,7 +180,10 @@
     <ClInclude Include="globals\Constants.h" />
     <ClInclude Include="globals\global.h" />
     <ClInclude Include="globals\Textures.h" />
-    <ClInclude Include="GameWindow.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="Multiplayer\Serde.h" />
+    <ClInclude Include="Multiplayer\ServerSocket.h" />
+    <ClInclude Include="Multiplayer\Server.h" />
     <ClInclude Include="TextRenderer.h" />
     <ClInclude Include="Utility\Timer.h" />
     <ClInclude Include="Utility\Utility.h" />
