@@ -13,6 +13,7 @@
 
 #include "Game.h"
 #include <Multiplayer/Serde.h>
+#include <SingleplayerGame.h>
 
 constexpr int width = 800;
 constexpr int height = 800;
@@ -38,6 +39,15 @@ int main()
 	std::cout << "Toggle output (less lag):   O" << '\n';
 	std::cout << "Exit:                       ESC" << '\n' << '\n';
 
+	// singleplayer release
+	SingleplayerGame gw("HORSE", 800, 800);
+	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
+	while (true) {
+		gw.clear();
+		gw.render();
+		gw.handleEvents();
+	}
+
 	std::cout << "How to start? (1: client | 2: server)" << '\n';
 	for (int i = 0; i < 2; i++)
 	{
@@ -49,7 +59,7 @@ int main()
 		case 1:
 		{
 			Game gw("HORSE", 800, 800);
-
+			::ShowWindow(::GetConsoleWindow(), SW_HIDE);
 			while (true) {
 				gw.clear();
 				gw.render();

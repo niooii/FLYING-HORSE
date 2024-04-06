@@ -39,6 +39,7 @@ private:
 	TextRenderer other_name_renderer;
 
 	SDL_DisplayMode display;
+	bool over{ false };
 
 	Timer timer;
 	Timer borderTimer;
@@ -91,6 +92,14 @@ private:
 				{
 					other_ppl_mutex.lock();
 					other_ppl_gamestate = replicated_data;
+					if (config::outputEnabled)
+					{
+						printf("recieved states for: \n");
+						for (const auto& data : replicated_data)
+						{
+							printf("%s\n", data.first.c_str());
+						}
+					}
 					other_ppl_mutex.unlock();
 				}
 

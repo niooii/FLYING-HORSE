@@ -28,6 +28,7 @@ private:
 	Timer throwTimer;
 	Timer ultTimer;
 	Timer beamDamageTimer;
+	Timer spiral_angle_inc;
 	//init at init
 	Player* player{};
 	int toThrow{90};
@@ -55,7 +56,8 @@ public:
 	void Pulse(double x, double y);
 	//pulses centered on boss.
 	void Pulse();
-	void Spiral(double x, double y);
+	void EndingSpiral();
+	void Spiral(double x, double y, SDL_Texture* startex);
 	void Ulting();
 	void borderInit();
 	//moves simulation of entity forward by some amount of time (undecided)

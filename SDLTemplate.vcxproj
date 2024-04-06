@@ -157,6 +157,7 @@
     <ClCompile Include="RenderTesting.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Multiplayer\Server.cpp" />
+    <ClCompile Include="SingleplayerGame.cpp" />
     <ClCompile Include="TextRenderer.cpp" />
     <ClCompile Include="Utility\Timer.cpp" />
     <ClCompile Include="Utility\Utility.cpp" />
@@ -183,6 +184,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="Multiplayer\Serde.h" />
     <ClInclude Include="Multiplayer\Server.h" />
+    <ClInclude Include="SingleplayerGame.h" />
     <ClInclude Include="TextRenderer.h" />
     <ClInclude Include="Utility\Timer.h" />
     <ClInclude Include="Utility\Utility.h" />

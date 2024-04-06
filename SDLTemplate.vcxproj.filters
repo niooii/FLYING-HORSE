@@ -78,6 +78,9 @@
     <ClCompile Include="Multiplayer\Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SingleplayerGame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Font Include="C:\Users\hewit\Downloads\lazy.ttf">
@@ -146,6 +149,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Multiplayer\ClientInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SingleplayerGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
