@@ -75,9 +75,6 @@
     <ClCompile Include="Multiplayer\ClientSocket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Multiplayer\ServerSocket.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Multiplayer\Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -145,10 +142,10 @@
     <ClInclude Include="Multiplayer\ClientSocket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Multiplayer\ServerSocket.h">
+    <ClInclude Include="Multiplayer\Server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Multiplayer\Server.h">
+    <ClInclude Include="Multiplayer\ClientInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

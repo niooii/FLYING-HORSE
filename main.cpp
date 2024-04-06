@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #pragma comment (lib, "Ws2_32.lib")
-#include <Multiplayer/ServerSocket.h>
+#include <Multiplayer/Server.h>
 #include <Multiplayer/ClientSocket.h>
 #include <SDL.h>
 #undef main
@@ -22,7 +22,6 @@ constexpr const char* windowTitle = "TITLE TEXT";
 int main() 
 {
 	::ShowWindow(::GetConsoleWindow(), SW_SHOW);
-	Serde::parse();
 
 	//print binding info
 	std::cout << "--BINDINGS--" << '\n';
@@ -60,8 +59,8 @@ int main()
 		}
 		case 2:
 		{
-			ServerSocket ss(25555);
-			ss.Listen();
+			Server ss(25555);
+			ss.Run();
 			break;
 		}
 		default:

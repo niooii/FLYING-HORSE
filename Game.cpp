@@ -5,8 +5,11 @@ Game::Game(const char* title, Uint16 width, Uint16 height)
 	std::cout << "enter display name: ";
 	std::cin >> display_name;
 
-	socket.ConnectTo("127.0.0.1", 25555);
-	socket.SendString(display_name);
+	socket_.ConnectTo("127.0.0.1", 25555);
+	socket_.SendString(display_name);
+
+	std::thread server_communication_thread = std::thread(&HandleServerReplication, &player, &projectiles);
+	server_communication_thread.detach();
 
 	info.w = width;
 	info.h = height;
@@ -20,6 +23,7 @@ Game::Game(const char* title, Uint16 width, Uint16 height)
 	textRenderer = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 26, { 0,0,0 });
 	tr2 = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 50, { 120,0,0 });
 	name_renderer = TextRenderer(&info, renderer, "You", "Fonts/lazy.ttf", 50, { 0,0,0 });
+	other_name_renderer = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 50, { 0,0,0 });
 
 	int x{}, y{};
 	SDL_GetWindowPosition(window, &x, &y);
@@ -39,6 +43,11 @@ Game::Game(const char* title, Uint16 width, Uint16 height)
 	//create player and boss objects
 	player = Player(textures::player, renderer, &info, 200, 200);
 	boss = Boss(textures::bossIdle, renderer, &info, 200, 200);
+}
+
+Game::~Game()
+{
+	
 }
 
 void Game::addEntity(Projectile& entity)
@@ -186,6 +195,44 @@ void Game::render()
 		}
 	}
 
+	// render other ppl stuff
+	
+	other_ppl_mutex.lock();
+	SDL_Rect dest{};
+	for (const auto& pair : other_ppl_gamestate)
+	{
+		const std::string& name = pair.first;
+		const GameState& gamestate = pair.second;
+
+		// TODO! make this sent with the other packet shit
+		bool isFlipped = gamestate.is_player_flipped;
+
+		// render other player
+		dest.x = gamestate.player_position.x;
+		dest.y = gamestate.player_position.y;
+		SDL_QueryTexture(textures::player, NULL, NULL, &dest.w, &dest.h);
+
+		other_name_renderer.text = name;
+		other_name_renderer.x = dest.x;
+		other_name_renderer.y = dest.y - dest.h;
+		other_name_renderer.regenerateTexture();
+		other_name_renderer.renderText();
+
+		SDL_RenderCopyEx(renderer, textures::player, NULL, &dest, 0, NULL, (isFlipped ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE));
+
+		// render other projectiles
+		for (const auto& p_pos : gamestate.projectile_positions)
+		{
+			dest.x = p_pos.x;
+			dest.y = p_pos.y;
+			SDL_QueryTexture(textures::circle, NULL, NULL, &dest.w, &dest.h);
+
+			SDL_RenderCopyEx(renderer, textures::circle, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
+		}
+	}
+	other_ppl_mutex.unlock();
+	
+
 	SDL_RenderPresent(renderer);
 }
 
@@ -329,6 +376,9 @@ void Game::handleKeyInput(const SDL_Keycode& sym)
 		break;
 		//PANIC KEY
 	case SDLK_h:
+		//server_communication_thread.join();
+		closesocket(socket_.GetSocket());
+		WSACleanup();
 		exit(0);
 	case SDLK_LEFTBRACKET:
 		config::siphonRate -= config::siphonRate * 0.01 * info.deltaTime;
@@ -426,6 +476,7 @@ void Game::renderBoss()
 
 void Game::quit()
 {
+	printf("quit called.");
 	if (global::bossActive)
 	{
 		//if devmode active, allow quit
@@ -450,6 +501,11 @@ void Game::quit()
 			textRenderer.quit();
 			//quit SDL subsystems
 			SDL_Quit();
+
+			// windows header bullshit
+			shutdown(socket_.GetSocket(), 2);
+			closesocket(socket_.GetSocket());
+			WSACleanup();
 			exit(0);
 		}
 	}
@@ -462,6 +518,10 @@ void Game::quit()
 		textRenderer.quit();
 		//quit SDL subsystems
 		SDL_Quit();
+
+		shutdown(socket_.GetSocket(), 2);
+		closesocket(socket_.GetSocket());
+		WSACleanup();
 		exit(0);
 	}
 	else 

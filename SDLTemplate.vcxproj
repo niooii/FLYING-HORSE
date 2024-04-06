@@ -156,7 +156,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RenderTesting.cpp" />
     <ClCompile Include="Game.cpp" />
-    <ClCompile Include="Multiplayer\ServerSocket.cpp" />
     <ClCompile Include="Multiplayer\Server.cpp" />
     <ClCompile Include="TextRenderer.cpp" />
     <ClCompile Include="Utility\Timer.cpp" />
@@ -168,6 +167,7 @@
     <Font Include="C:\Users\hewit\Downloads\lazy.ttf" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Multiplayer\ClientInfo.h" />
     <ClInclude Include="Multiplayer\ClientSocket.h" />
     <ClInclude Include="Entities\Boss.h" />
     <ClInclude Include="Entities\Entity.h" />
@@ -182,7 +182,6 @@
     <ClInclude Include="globals\Textures.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Multiplayer\Serde.h" />
-    <ClInclude Include="Multiplayer\ServerSocket.h" />
     <ClInclude Include="Multiplayer\Server.h" />
     <ClInclude Include="TextRenderer.h" />
     <ClInclude Include="Utility\Timer.h" />
