@@ -16,6 +16,7 @@ private:
 	int fontSize;
 	SDL_Surface* textSurface{ nullptr };
 	SDL_Texture* textTexture{ nullptr };
+	bool use_coord_as_center{false};
 	void textToTexture();
 public:
 	SDL_Rect size{};
@@ -30,6 +31,10 @@ public:
 	void setColor(Uint8 r, Uint8 g, Uint8 b);
 	void renderText();
 	void regenerateTexture();
+	inline void setUseCenteredCoords(bool b)
+	{
+		use_coord_as_center = b;
+	}
 	//centers on screen
 	void center();
 	void quit();

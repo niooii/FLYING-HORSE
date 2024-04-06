@@ -78,19 +78,21 @@ protected:
 	*/
 	static void ReplicateStatesToClients()
 	{
-		std::stringstream ss;
 		if (clients.empty())
 		{
 			return;
 		}
-		for (auto const& [uid, client] : clients)
-		{
-			ss << client.name << '~' << client.serialized_gamestate << '~';
-		}
-		std::string serialized_states = ss.str();
 		// replication
 		for (auto const& [uid, client] : clients)
 		{
+			std::stringstream ss;
+			for (auto const& [uid_, client_] : clients)
+			{
+				if (uid == uid_)
+					continue;
+				ss << client_.name << '~' << client_.serialized_gamestate << '~';
+			}
+			std::string serialized_states = ss.str();
 			send(client.connection_info.sock, serialized_states.c_str() + '\0', serialized_states.size() + 1, 0);
 		}
 	}
@@ -100,7 +102,7 @@ protected:
 		Timer timer{};
 		while (true)
 		{
-			if (timer.elapsed() > 1 / 60.0)
+			if (timer.elapsed() > 1 / 144.0)
 			{
 				timer.reset();
 				ReplicateStatesToClients();

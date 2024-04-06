@@ -22,8 +22,11 @@ Game::Game(const char* title, Uint16 width, Uint16 height)
 
 	textRenderer = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 26, { 0,0,0 });
 	tr2 = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 50, { 120,0,0 });
-	name_renderer = TextRenderer(&info, renderer, "You", "Fonts/lazy.ttf", 50, { 0,0,0 });
-	other_name_renderer = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 50, { 0,0,0 });
+	name_renderer = TextRenderer(&info, renderer, "You", "Fonts/lazy.ttf", 35, { 0,0,0 });
+	other_name_renderer = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 35, { 0,0,0 });
+
+	name_renderer.setUseCenteredCoords(true);
+	other_name_renderer.setUseCenteredCoords(true);
 
 	int x{}, y{};
 	SDL_GetWindowPosition(window, &x, &y);
@@ -38,7 +41,9 @@ Game::Game(const char* title, Uint16 width, Uint16 height)
 	textures::bossIdle = utils::loadTexture(renderer, "Textures/bossIdle.png");
 	textures::bossThrow = utils::loadTexture(renderer, "Textures/bossThrow.png");
 	textures::player = utils::loadTexture(renderer, "Textures/player.png");
+	textures::offcolor_player = utils::loadTexture(renderer, "Textures/offcolor_player.png");
 	textures::circle = utils::loadTexture(renderer, "Textures/circle.png");
+	textures::offcolor_circle = utils::loadTexture(renderer, "Textures/offcolor_circle.png");
 
 	//create player and boss objects
 	player = Player(textures::player, renderer, &info, 200, 200);
@@ -90,6 +95,44 @@ void Game::render()
 
 	SDL_GetMouseState(&info.mX, &info.mY);
 
+	// render other ppl stuff
+
+	other_ppl_mutex.lock();
+	SDL_Rect dest{};
+	for (const auto& pair : other_ppl_gamestate)
+	{
+		const std::string& name = pair.first;
+		const GameState& gamestate = pair.second;
+
+		// TODO! make this sent with the other packet shit
+		bool isFlipped = gamestate.is_player_flipped;
+
+		// render other player
+		dest.x = gamestate.player_position.x;
+		dest.y = gamestate.player_position.y;
+		SDL_QueryTexture(textures::player, NULL, NULL, &dest.w, &dest.h);
+
+		other_name_renderer.text = name;
+		other_name_renderer.x = dest.x + dest.w / 2;
+		other_name_renderer.y = dest.y - dest.h * 0.8;
+		other_name_renderer.setColor(170, 170, 170);
+		other_name_renderer.regenerateTexture();
+		other_name_renderer.renderText();
+
+		SDL_RenderCopyEx(renderer, textures::offcolor_player, NULL, &dest, 0, NULL, (isFlipped ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE));
+
+		// render other projectiles
+		for (const auto& p_pos : gamestate.projectile_positions)
+		{
+			dest.x = p_pos.x;
+			dest.y = p_pos.y;
+			SDL_QueryTexture(textures::circle, NULL, NULL, &dest.w, &dest.h);
+
+			SDL_RenderCopyEx(renderer, textures::offcolor_circle, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
+		}
+	}
+	other_ppl_mutex.unlock();
+
 	if (global::bossActive)
 	{
 		renderBoss();
@@ -105,9 +148,11 @@ void Game::render()
 	//render player
 	player.update();
 	player.render();
-	name_renderer.x = player.x;
-	name_renderer.y = player.y - player.hitbox.h;
+	name_renderer.x = player.x + player.hitbox.w/2;
+	name_renderer.y = player.y - player.hitbox.h * 0.8;
 	name_renderer.renderText();
+
+	//SDL_SetTextureColorMod(textures::offcolor_player, 255, 0, 0);
 
 	//if boss start is true, start boss immediately.
 	if (global::startBoss)
@@ -194,44 +239,6 @@ void Game::render()
 			global::isFullScreen = true;
 		}
 	}
-
-	// render other ppl stuff
-	
-	other_ppl_mutex.lock();
-	SDL_Rect dest{};
-	for (const auto& pair : other_ppl_gamestate)
-	{
-		const std::string& name = pair.first;
-		const GameState& gamestate = pair.second;
-
-		// TODO! make this sent with the other packet shit
-		bool isFlipped = gamestate.is_player_flipped;
-
-		// render other player
-		dest.x = gamestate.player_position.x;
-		dest.y = gamestate.player_position.y;
-		SDL_QueryTexture(textures::player, NULL, NULL, &dest.w, &dest.h);
-
-		other_name_renderer.text = name;
-		other_name_renderer.x = dest.x;
-		other_name_renderer.y = dest.y - dest.h;
-		other_name_renderer.regenerateTexture();
-		other_name_renderer.renderText();
-
-		SDL_RenderCopyEx(renderer, textures::player, NULL, &dest, 0, NULL, (isFlipped ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE));
-
-		// render other projectiles
-		for (const auto& p_pos : gamestate.projectile_positions)
-		{
-			dest.x = p_pos.x;
-			dest.y = p_pos.y;
-			SDL_QueryTexture(textures::circle, NULL, NULL, &dest.w, &dest.h);
-
-			SDL_RenderCopyEx(renderer, textures::circle, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
-		}
-	}
-	other_ppl_mutex.unlock();
-	
 
 	SDL_RenderPresent(renderer);
 }
