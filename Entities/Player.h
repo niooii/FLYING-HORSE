@@ -9,7 +9,7 @@ private:
 protected:
 	double deltaTimeSum{};
 public:
-	int health{(global::infhp ? 1000000 : 6000)};
+	int health{(global::infhp ? 1000000 : 5000)};
 
 	using Entity::Entity;
 	void handleInput();

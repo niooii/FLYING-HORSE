@@ -54,8 +54,19 @@ void TextRenderer::renderText()
 		size.y = y;
 
 	SDL_QueryTexture(textTexture, NULL, NULL, &size.w, &size.h);
-
-	SDL_RenderCopyEx(renderer, textTexture, NULL, &size, 0, NULL, SDL_FLIP_NONE);
+	if (use_coord_as_center)
+	{
+		SDL_Rect tmp{};
+		tmp.w = size.w;
+		tmp.h = size.h;
+		tmp.x = size.x - size.w / 2;
+		tmp.y = size.y - size.h / 2;
+		SDL_RenderCopyEx(renderer, textTexture, NULL, &tmp, 0, NULL, SDL_FLIP_NONE);
+	}
+	else
+	{
+		SDL_RenderCopyEx(renderer, textTexture, NULL, &size, 0, NULL, SDL_FLIP_NONE);
+	}
 }
 
 void TextRenderer::textToTexture()

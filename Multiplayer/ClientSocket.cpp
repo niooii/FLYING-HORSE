@@ -4,6 +4,11 @@ ClientSocket::ClientSocket()
 {
 }
 
+ClientSocket::~ClientSocket()
+{
+    closesocket(sock);
+}
+
 void ClientSocket::ConnectTo(const char* ip, unsigned short port)
 {
     struct sockaddr_in ServAddr;
@@ -31,4 +36,9 @@ void ClientSocket::SendString(std::string str)
 {
     // null terminated bullshitt
     send(sock, str.c_str() + '\0', str.size() + 1, 0);
+}
+
+void ClientSocket::ForceClose()
+{
+    closesocket(sock);
 }

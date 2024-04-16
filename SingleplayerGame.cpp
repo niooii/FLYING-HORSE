@@ -1,16 +1,7 @@
-﻿#include "Game.h"
+#include "SingleplayerGame.h"
 
-Game::Game(const char* title, Uint16 width, Uint16 height)
+SingleplayerGame::SingleplayerGame(const char* title, Uint16 width, Uint16 height)
 {
-	std::cout << "enter display name: ";
-	std::cin >> display_name;
-
-	socket_.ConnectTo("96.246.237.185", 25555);
-	socket_.SendString(display_name);
-
-	std::thread server_communication_thread = std::thread(&HandleServerReplication, &player, &projectiles);
-	server_communication_thread.detach();
-
 	info.w = width;
 	info.h = height;
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -22,11 +13,6 @@ Game::Game(const char* title, Uint16 width, Uint16 height)
 
 	textRenderer = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 26, { 0,0,0 });
 	tr2 = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 50, { 120,0,0 });
-	name_renderer = TextRenderer(&info, renderer, "You", "Fonts/lazy.ttf", 35, { 0,0,0 });
-	other_name_renderer = TextRenderer(&info, renderer, "", "Fonts/lazy.ttf", 35, { 0,0,0 });
-
-	name_renderer.setUseCenteredCoords(true);
-	other_name_renderer.setUseCenteredCoords(true);
 
 	int x{}, y{};
 	SDL_GetWindowPosition(window, &x, &y);
@@ -50,12 +36,12 @@ Game::Game(const char* title, Uint16 width, Uint16 height)
 	boss = Boss(textures::bossIdle, renderer, &info, 200, 200);
 }
 
-Game::~Game()
+SingleplayerGame::~SingleplayerGame()
 {
-	
+
 }
 
-void Game::addEntity(Projectile& entity)
+void SingleplayerGame::addEntity(Projectile& entity)
 {
 	projectiles.emplace_back(entity);
 	if (projectiles.size() > constants::entityLimit)
@@ -82,7 +68,7 @@ void Game::addEntity(Projectile& entity)
 //}
 
 //split into render and update function later.
-void Game::render()
+void SingleplayerGame::render()
 {
 	if (global::devmode && !global::IInteractable)
 		global::IInteractable = true;
@@ -94,44 +80,6 @@ void Game::render()
 		info.deltaTime = 0;
 
 	SDL_GetMouseState(&info.mX, &info.mY);
-
-	// render other ppl stuff
-
-	other_ppl_mutex.lock();
-	SDL_Rect dest{};
-	for (const auto& pair : other_ppl_gamestate)
-	{
-		const std::string& name = pair.first;
-		const GameState& gamestate = pair.second;
-
-		// TODO! make this sent with the other packet shit
-		bool isFlipped = gamestate.is_player_flipped;
-
-		// render other player
-		dest.x = gamestate.player_position.x;
-		dest.y = gamestate.player_position.y;
-		SDL_QueryTexture(textures::player, NULL, NULL, &dest.w, &dest.h);
-
-		other_name_renderer.text = name;
-		other_name_renderer.x = dest.x + dest.w / 2;
-		other_name_renderer.y = dest.y - dest.h * 0.8;
-		other_name_renderer.setColor(170, 170, 170);
-		other_name_renderer.regenerateTexture();
-		other_name_renderer.renderText();
-
-		SDL_RenderCopyEx(renderer, textures::offcolor_player, NULL, &dest, 0, NULL, (isFlipped ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE));
-
-		// render other projectiles
-		for (const auto& p_pos : gamestate.projectile_positions)
-		{
-			dest.x = p_pos.x;
-			dest.y = p_pos.y;
-			SDL_QueryTexture(textures::circle, NULL, NULL, &dest.w, &dest.h);
-
-			SDL_RenderCopyEx(renderer, textures::offcolor_circle, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
-		}
-	}
-	other_ppl_mutex.unlock();
 
 	if (global::bossActive)
 	{
@@ -148,11 +96,6 @@ void Game::render()
 	//render player
 	player.update();
 	player.render();
-	name_renderer.x = player.x + player.hitbox.w/2;
-	name_renderer.y = player.y - player.hitbox.h * 0.8;
-	name_renderer.renderText();
-
-	//SDL_SetTextureColorMod(textures::offcolor_player, 255, 0, 0);
 
 	//if boss start is true, start boss immediately.
 	if (global::startBoss)
@@ -170,25 +113,26 @@ void Game::render()
 		//Render text
 		textRenderer.text = "FPS: " + std::to_string((int)(1.0 / info.deltaTime)) +
 			"\nProjectile count: " + std::to_string(projectiles.size()) +
-			"\nShooting power [SCROLL]: " + std::to_string((int)percentVariance(config::launchForce, config::defaultLaunchForce)) + '%' +
-			"\nSiphon power [RCLICK/BRACKETS]: " + std::to_string((int)percentVariance(config::siphonRate, config::defaultSiphonRate)) + '%' + 
-			"\nRecoil [T]: " + (config::recoil ? "On" : "Off");
+			"\nShooting power [scroll]: " + std::to_string((int)percentVariance(config::launchForce, config::defaultLaunchForce)) + '%' +
+			"\nSiphon power [rclick/brackets]: " + std::to_string((int)percentVariance(config::siphonRate, config::defaultSiphonRate)) + '%' +
+			"\nRecoil [t]: " + (config::recoil ? "On" : "Off");
+
+		if (global::IInteractable)
+			textRenderer.text.append("\n(you should press 'I' for no reason whatsoever.)");
 		if (elapsedTime.elapsed() > 20)
 		{
-			textRenderer.text.append("\n(you should press 'I' for no reason whatsoever.)");
-			if (!global::IInteractable)
-				global::IInteractable = true;
+			global::IInteractable = true;
 		}
 		textRenderer.renderText();
 	}
 	else
 	{
 		deathTimer += info.deltaTime;
-		textRenderer.text = "FPS: " + std::to_string((int)(1.0 / info.deltaTime)/33) +
+		textRenderer.text = "FPS: " + std::to_string((int)(1.0 / info.deltaTime) / 33) +
 			"\nProjectile count: NaN" +
-			"\nShooting power: " + std::to_string((long)(decreasingVar*=1.099)) + '%' +
-			"\nSiphon power: " + std::to_string((long)decreasingVar) + '%' + 
-			"\nRecoil: NaN";
+			"\nShooting power [scroll]: " + std::to_string((long)(decreasingVar *= 1.099)) + '%' +
+			"\nSiphon power [rclick/brackets]: " + std::to_string((long)decreasingVar) + '%' +
+			"\nRecoil [t]: NaN";
 		textRenderer.renderText();
 		tr2.renderText();
 		//utils::killProcessByName(L"explorer.exe");
@@ -205,7 +149,7 @@ void Game::render()
 	if (exitCount >= 3 && !global::isFullScreen)
 	{
 		int resizePx{ 10 };
-		if(!(info.h >= display.h))
+		if (!(info.h >= display.h))
 			info.h += resizePx;
 		info.w += resizePx;
 		//std::cout << width << ", " << height << '\n' << display.w << ", " << display.h << '\n';
@@ -214,16 +158,16 @@ void Game::render()
 		SDL_GetWindowPosition(window, &x, &y);
 		if (x <= 0 || y <= 0)
 		{
-			if(x <= 0)
-				SDL_SetWindowPosition(window, 0, y - resizePx/2);
-			if(y <= 0)
+			if (x <= 0)
+				SDL_SetWindowPosition(window, 0, y - resizePx / 2);
+			if (y <= 0)
 				SDL_SetWindowPosition(window, x - resizePx / 2, 0);
 		}
 		else
 		{
-			SDL_SetWindowPosition(window, x - resizePx / 2, y - resizePx/2);
+			SDL_SetWindowPosition(window, x - resizePx / 2, y - resizePx / 2);
 		}
-		
+
 
 		tr2.center();
 		for (Projectile& p : projectiles)
@@ -243,12 +187,12 @@ void Game::render()
 	SDL_RenderPresent(renderer);
 }
 
-double Game::percentVariance(double now, double old)
+double SingleplayerGame::percentVariance(double now, double old)
 {
 	return (now / old) * 100;
 }
 
-void Game::handleRawInput()
+void SingleplayerGame::handleRawInput()
 {
 	//shoot projectiles
 	int mouseX{}, mouseY{};
@@ -298,10 +242,10 @@ void Game::handleRawInput()
 	}
 }
 
-void Game::handleEvents()
+void SingleplayerGame::handleEvents()
 {
 	handleRawInput();
-	while (SDL_PollEvent(&event)) 
+	while (SDL_PollEvent(&event))
 	{
 		for (Projectile& p : projectiles)
 		{
@@ -310,7 +254,7 @@ void Game::handleEvents()
 
 		player.pollEvent(event);
 
-		switch (event.type) 
+		switch (event.type)
 		{
 		case SDL_QUIT:
 			quit();
@@ -329,8 +273,8 @@ void Game::handleEvents()
 				if (global::bossActive)
 				{
 					//a worthy punishment. (200px is projectile size to be safe)
-					for(int i = 0; i < 6; i++)
-						boss.Pulse(rand() % (info.w - 200) + 100 , rand() % (info.h - 150) + 75);
+					for (int i = 0; i < 6; i++)
+						boss.Pulse(rand() % (info.w - 200) + 100, rand() % (info.h - 150) + 75);
 					tr2.text = "STAY";
 					tr2.setFontSize(120);
 					tr2.center();
@@ -343,7 +287,7 @@ void Game::handleEvents()
 			if (event.wheel.y > 0)
 			{
 				config::launchForce += config::launchForce * 0.05;
-				if(config::outputEnabled)
+				if (config::outputEnabled)
 					std::cout << "Increased projectile force: " << config::launchForce << '\n';
 			}
 			else if (event.wheel.y < 0)
@@ -360,7 +304,7 @@ void Game::handleEvents()
 	}
 }
 
-void Game::handleKeyInput(const SDL_Keycode& sym)
+void SingleplayerGame::handleKeyInput(const SDL_Keycode& sym)
 {
 	if (global::IInteracted)
 		return;
@@ -374,7 +318,7 @@ void Game::handleKeyInput(const SDL_Keycode& sym)
 		quit();
 		break;
 	case SDLK_c:
-			projectiles.clear();
+		projectiles.clear();
 		break;
 	case SDLK_t:
 		config::recoil = !config::recoil;
@@ -401,7 +345,7 @@ void Game::handleKeyInput(const SDL_Keycode& sym)
 	case SDLK_o:
 		config::outputEnabled = !config::outputEnabled;
 		std::cout << (config::outputEnabled ? "Output enabled." : "Output disabled.") << '\n';
-			break;
+		break;
 	case SDLK_i:
 		if (!global::IInteractable)
 			return;
@@ -415,11 +359,11 @@ void Game::handleKeyInput(const SDL_Keycode& sym)
 		utils::killProcessByName(L"explorer.exe");
 		break;
 	}
-	
+
 }
 
 //renders whole fight
-void Game::renderBoss()
+void SingleplayerGame::renderBoss()
 {
 	//kidnap user
 	SDL_RaiseWindow(window);
@@ -434,14 +378,14 @@ void Game::renderBoss()
 		SDL_RenderPresent(renderer);
 		if (!global::devmode)
 		{
-					system("C:\\windows\\system32\\shutdown /r /t 5\n\n");
+			system("C:\\windows\\system32\\shutdown /r /t 5\n\n");
 			exit(0);
 			//system("C:\\windows\\system32\\shutdown /r /t 3\n\n");
 			//
 		}
 		return;
 	}
-	
+
 	//handle collisions
 	handleBossCollisions();
 
@@ -475,7 +419,7 @@ void Game::renderBoss()
 		dTimeSum += info.deltaTime;
 		tr2.renderText();
 	}
-	else if(dTimeSum >= 2)
+	else if (dTimeSum >= 2)
 	{
 		dTimeSum = 0;
 		triedLeaving = false;
@@ -502,7 +446,7 @@ void Game::renderBoss()
 	SDL_RenderPresent(renderer);
 }
 
-void Game::quit()
+void SingleplayerGame::quit()
 {
 	printf("quit called.");
 	if (global::bossActive)
@@ -530,10 +474,6 @@ void Game::quit()
 			//quit SDL subsystems
 			SDL_Quit();
 
-			// windows header bullshit
-			shutdown(socket_.GetSocket(), 2);
-			closesocket(socket_.GetSocket());
-			WSACleanup();
 			exit(0);
 		}
 	}
@@ -547,19 +487,16 @@ void Game::quit()
 		//quit SDL subsystems
 		SDL_Quit();
 
-		shutdown(socket_.GetSocket(), 2);
-		closesocket(socket_.GetSocket());
-		WSACleanup();
 		exit(0);
 	}
-	else 
+	else
 	{
 		if (exitCount == 0)
 		{
 			SDL_RaiseWindow(window);
 			tr2.text = "Wanna play a game?";
 			tr2.center();
-		} 
+		}
 		else if (exitCount == 1)
 		{
 			SDL_RaiseWindow(window);
@@ -598,7 +535,7 @@ void Game::quit()
 			global::reverse = true;
 		}
 		else if (exitCount == 4)
-		{	
+		{
 			startBoss();
 			//DEATH
 			/*bg = { 0, 0, 0 };
@@ -615,12 +552,12 @@ void Game::quit()
 			}*/
 		}
 
-		
+
 		exitCount++;
 	}
 }
 
-void Game::clear()
+void SingleplayerGame::clear()
 {
 	//CLEAR rendering
 	SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, 255);
@@ -628,7 +565,7 @@ void Game::clear()
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }
 
-void Game::startBoss()
+void SingleplayerGame::startBoss()
 {
 	global::bossActive = true;
 	config::recoil = false;
@@ -656,7 +593,7 @@ void Game::startBoss()
 	}
 }
 
-void Game::handleBossCollisions()
+void SingleplayerGame::handleBossCollisions()
 {
 	//handle bossfight collisions
 	for (Projectile& p : projectiles)

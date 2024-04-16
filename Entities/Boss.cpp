@@ -25,9 +25,24 @@ void Boss::update()
 	{
 		state = boss::state::ThrowingBeam2;
 	}
-	else if (health <= 1000 && health > 0)
+	else if (health <= 1000 && health > 20)
 	{
 		state = boss::state::Final;
+	}
+	else if (health <= 0)
+	{
+		/*info->w = 600;
+		info->h = 600;*/
+
+		x = info->w / 2;
+		y = info->h / 2;
+		
+		if (timer.elapsed() > 0.12)
+		{
+			timer.reset();
+			EndingSpiral();
+		}
+		return;
 	}
 	else
 	{
@@ -197,7 +212,7 @@ void Boss::Throwing()
 				Pulse((isFlipped ? x + size.w / 2 : x), y + size.h / 2);
 			}
 			else if (thrown == toThrow / 3 || thrown == 2 * toThrow / 3)
-				Spiral((isFlipped ? x + size.w / 2 : x), y + size.h / 2);
+				Spiral((isFlipped ? x + size.w / 2 : x), y + size.h / 2, textures::redStar);
 
 			throwTimer.reset();
 
@@ -331,7 +346,13 @@ void Boss::Pulse()
 	Pulse(x + size.w / 2.0, y + size.h / 2.0);
 }
 
-void Boss::Spiral(double x, double y)
+void Boss::EndingSpiral()
+{
+	SDL_SetTextureColorMod(textures::redStar, 100 * abs(sinf(spiral_angle_inc.elapsed() * 3)), 0, 0);
+	Spiral(x + size.w / 2.0, y + size.h / 2.0, textures::redStar);
+}
+
+void Boss::Spiral(double x, double y, SDL_Texture* startex)
 {
 	Vector2 v(0, 1);
 	Vector2 r;
@@ -341,7 +362,7 @@ void Boss::Spiral(double x, double y)
 		v.rotate(5);
 		star.acceleration = v * 4;
 		Vector2 r = v;
-		r.rotate(90);
+		r.rotate(90 + spiral_angle_inc.elapsed() * 50);
 		star.velocity = r * 10;
 		star.friction = false;
 		projectiles.emplace_back(star);
