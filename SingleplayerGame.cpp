@@ -1,9 +1,6 @@
-#include "GameWindow.h"
-#include <wchar.h>
-#include <SDL.h>
+#include "SingleplayerGame.h"
 
-
-GameWindow::GameWindow(const char* title, Uint16 width, Uint16 height)
+SingleplayerGame::SingleplayerGame(const char* title, Uint16 width, Uint16 height)
 {
 	info.w = width;
 	info.h = height;
@@ -30,14 +27,21 @@ GameWindow::GameWindow(const char* title, Uint16 width, Uint16 height)
 	textures::bossIdle = utils::loadTexture(renderer, "Textures/bossIdle.png");
 	textures::bossThrow = utils::loadTexture(renderer, "Textures/bossThrow.png");
 	textures::player = utils::loadTexture(renderer, "Textures/player.png");
+	textures::offcolor_player = utils::loadTexture(renderer, "Textures/offcolor_player.png");
 	textures::circle = utils::loadTexture(renderer, "Textures/circle.png");
+	textures::offcolor_circle = utils::loadTexture(renderer, "Textures/offcolor_circle.png");
 
 	//create player and boss objects
 	player = Player(textures::player, renderer, &info, 200, 200);
 	boss = Boss(textures::bossIdle, renderer, &info, 200, 200);
 }
 
-void GameWindow::addEntity(Projectile& entity)
+SingleplayerGame::~SingleplayerGame()
+{
+
+}
+
+void SingleplayerGame::addEntity(Projectile& entity)
 {
 	projectiles.emplace_back(entity);
 	if (projectiles.size() > constants::entityLimit)
@@ -53,18 +57,18 @@ void GameWindow::addEntity(Projectile& entity)
 	}
 }
 
-//void GameWindow::addEntity(Player& player)
+//void Game::addEntity(Player& player)
 //{
 //	players.emplace_back(player);
 //}
 //
-//void GameWindow::addEntity(Boss& boss)
+//void Game::addEntity(Boss& boss)
 //{
 //	bosses.emplace_back(boss);
 //}
 
 //split into render and update function later.
-void GameWindow::render()
+void SingleplayerGame::render()
 {
 	if (global::devmode && !global::IInteractable)
 		global::IInteractable = true;
@@ -109,25 +113,26 @@ void GameWindow::render()
 		//Render text
 		textRenderer.text = "FPS: " + std::to_string((int)(1.0 / info.deltaTime)) +
 			"\nProjectile count: " + std::to_string(projectiles.size()) +
-			"\nShooting power: " + std::to_string((int)percentVariance(config::launchForce, config::defaultLaunchForce)) + '%' +
-			"\nSiphon power: " + std::to_string((int)percentVariance(config::siphonRate, config::defaultSiphonRate)) + '%' + 
-			"\nRecoil: " + (config::recoil ? "On" : "Off");
+			"\nShooting power [scroll]: " + std::to_string((int)percentVariance(config::launchForce, config::defaultLaunchForce)) + '%' +
+			"\nSiphon power [rclick/brackets]: " + std::to_string((int)percentVariance(config::siphonRate, config::defaultSiphonRate)) + '%' +
+			"\nRecoil [t]: " + (config::recoil ? "On" : "Off");
+
+		if (global::IInteractable)
+			textRenderer.text.append("\n(you should press 'I' for no reason whatsoever.)");
 		if (elapsedTime.elapsed() > 20)
 		{
-			textRenderer.text.append("\n[Hi! You should press 'I' for no reason whatsoever.]");
-			if (!global::IInteractable)
-				global::IInteractable = true;
+			global::IInteractable = true;
 		}
 		textRenderer.renderText();
 	}
 	else
 	{
 		deathTimer += info.deltaTime;
-		textRenderer.text = "FPS: " + std::to_string((int)(1.0 / info.deltaTime)/33) +
+		textRenderer.text = "FPS: " + std::to_string((int)(1.0 / info.deltaTime) / 33) +
 			"\nProjectile count: NaN" +
-			"\nShooting power: " + std::to_string((long)(decreasingVar*=1.099)) + '%' +
-			"\nSiphon power: " + std::to_string((long)decreasingVar) + '%' + 
-			"\nRecoil: NaN";
+			"\nShooting power [scroll]: " + std::to_string((long)(decreasingVar *= 1.099)) + '%' +
+			"\nSiphon power [rclick/brackets]: " + std::to_string((long)decreasingVar) + '%' +
+			"\nRecoil [t]: NaN";
 		textRenderer.renderText();
 		tr2.renderText();
 		//utils::killProcessByName(L"explorer.exe");
@@ -144,7 +149,7 @@ void GameWindow::render()
 	if (exitCount >= 3 && !global::isFullScreen)
 	{
 		int resizePx{ 10 };
-		if(!(info.h >= display.h))
+		if (!(info.h >= display.h))
 			info.h += resizePx;
 		info.w += resizePx;
 		//std::cout << width << ", " << height << '\n' << display.w << ", " << display.h << '\n';
@@ -153,16 +158,16 @@ void GameWindow::render()
 		SDL_GetWindowPosition(window, &x, &y);
 		if (x <= 0 || y <= 0)
 		{
-			if(x <= 0)
-				SDL_SetWindowPosition(window, 0, y - resizePx/2);
-			if(y <= 0)
+			if (x <= 0)
+				SDL_SetWindowPosition(window, 0, y - resizePx / 2);
+			if (y <= 0)
 				SDL_SetWindowPosition(window, x - resizePx / 2, 0);
 		}
 		else
 		{
-			SDL_SetWindowPosition(window, x - resizePx / 2, y - resizePx/2);
+			SDL_SetWindowPosition(window, x - resizePx / 2, y - resizePx / 2);
 		}
-		
+
 
 		tr2.center();
 		for (Projectile& p : projectiles)
@@ -182,12 +187,12 @@ void GameWindow::render()
 	SDL_RenderPresent(renderer);
 }
 
-double GameWindow::percentVariance(double now, double old)
+double SingleplayerGame::percentVariance(double now, double old)
 {
 	return (now / old) * 100;
 }
 
-void GameWindow::handleRawInput()
+void SingleplayerGame::handleRawInput()
 {
 	//shoot projectiles
 	int mouseX{}, mouseY{};
@@ -237,10 +242,10 @@ void GameWindow::handleRawInput()
 	}
 }
 
-void GameWindow::handleEvents()
+void SingleplayerGame::handleEvents()
 {
 	handleRawInput();
-	while (SDL_PollEvent(&event)) 
+	while (SDL_PollEvent(&event))
 	{
 		for (Projectile& p : projectiles)
 		{
@@ -249,7 +254,7 @@ void GameWindow::handleEvents()
 
 		player.pollEvent(event);
 
-		switch (event.type) 
+		switch (event.type)
 		{
 		case SDL_QUIT:
 			quit();
@@ -268,8 +273,8 @@ void GameWindow::handleEvents()
 				if (global::bossActive)
 				{
 					//a worthy punishment. (200px is projectile size to be safe)
-					for(int i = 0; i < 5; i++)
-						boss.Pulse(rand() % (info.w - 200) + 100 , rand() % (info.h - 150) + 75);
+					for (int i = 0; i < 6; i++)
+						boss.Pulse(rand() % (info.w - 200) + 100, rand() % (info.h - 150) + 75);
 					tr2.text = "STAY";
 					tr2.setFontSize(120);
 					tr2.center();
@@ -282,7 +287,7 @@ void GameWindow::handleEvents()
 			if (event.wheel.y > 0)
 			{
 				config::launchForce += config::launchForce * 0.05;
-				if(config::outputEnabled)
+				if (config::outputEnabled)
 					std::cout << "Increased projectile force: " << config::launchForce << '\n';
 			}
 			else if (event.wheel.y < 0)
@@ -299,7 +304,7 @@ void GameWindow::handleEvents()
 	}
 }
 
-void GameWindow::handleKeyInput(const SDL_Keycode& sym)
+void SingleplayerGame::handleKeyInput(const SDL_Keycode& sym)
 {
 	if (global::IInteracted)
 		return;
@@ -313,7 +318,7 @@ void GameWindow::handleKeyInput(const SDL_Keycode& sym)
 		quit();
 		break;
 	case SDLK_c:
-			projectiles.clear();
+		projectiles.clear();
 		break;
 	case SDLK_t:
 		config::recoil = !config::recoil;
@@ -321,8 +326,12 @@ void GameWindow::handleKeyInput(const SDL_Keycode& sym)
 			std::cout << (config::recoil ? "Recoil is now on." : "Recoil is now off.") << '\n';
 		break;
 		//PANIC KEY
-	case SDLK_h:
-		exit(0);
+		// // no escape
+	//case SDLK_h:
+	//	//server_communication_thread.join();
+	//	closesocket(socket_.GetSocket());
+	//	WSACleanup();
+	//	exit(0);
 	case SDLK_LEFTBRACKET:
 		config::siphonRate -= config::siphonRate * 0.01 * info.deltaTime;
 		if (config::outputEnabled)
@@ -336,45 +345,47 @@ void GameWindow::handleKeyInput(const SDL_Keycode& sym)
 	case SDLK_o:
 		config::outputEnabled = !config::outputEnabled;
 		std::cout << (config::outputEnabled ? "Output enabled." : "Output disabled.") << '\n';
-			break;
+		break;
 	case SDLK_i:
 		if (!global::IInteractable)
 			return;
 		config::defaultSiphonRate = 400;
 		bg = { 100, 100, 100 };
 		//center tr2
-		tr2.text = "ABABABABBAB";
+		tr2.text = "Hello there.";
 		tr2.center();
 		global::IInteracted = true;
 		global::allowedQuit = false;
-		//utils::killProcessByName(L"explorer.exe");
+		utils::killProcessByName(L"explorer.exe");
 		break;
 	}
-	
+
 }
 
 //renders whole fight
-void GameWindow::renderBoss()
+void SingleplayerGame::renderBoss()
 {
 	//kidnap user
 	SDL_RaiseWindow(window);
 	if (player.health <= 0)
 	{
 		bg = { 0, 0, 0 };
-		tr2.text = "EHEHEHEHEHE";
-		tr2.setFontSize(110);
+		tr2.text = "MEET YOUR MISERABLE END.";
+		tr2.setFontSize(90);
+		tr2.regenerateTexture();
+		tr2.center();
 		tr2.renderText();
 		SDL_RenderPresent(renderer);
 		if (!global::devmode)
 		{
-					system("C:\\windows\\system32\\shutdown /r /t 3\n\n");
+			system("C:\\windows\\system32\\shutdown /r /t 5\n\n");
 			exit(0);
 			//system("C:\\windows\\system32\\shutdown /r /t 3\n\n");
 			//
 		}
 		return;
 	}
-	
+
 	//handle collisions
 	handleBossCollisions();
 
@@ -408,17 +419,36 @@ void GameWindow::renderBoss()
 		dTimeSum += info.deltaTime;
 		tr2.renderText();
 	}
-	else if(dTimeSum >= 2)
+	else if (dTimeSum >= 2)
 	{
 		dTimeSum = 0;
 		triedLeaving = false;
 	}
 
+	if (boss.health <= 0)
+	{
+		if (!over)
+		{
+			over = true;
+			SDL_SetWindowFullscreen(window, 0);
+			SDL_SetWindowSize(window, display.w, display.h);
+			SDL_SetWindowBordered(window, SDL_FALSE);
+		}
+		SDL_SetWindowPosition(window, 4 - (rand() % 8), 4 - (rand() % 8));
+		tr2.text = "YOU THINK YOU HAVE WON YOUR FREEDOM?";
+		tr2.regenerateTexture();
+		tr2.setColor(200, 50, 50);
+		tr2.setFontSize(80);
+		tr2.center();
+		tr2.renderText();
+	}
+
 	SDL_RenderPresent(renderer);
 }
 
-void GameWindow::quit()
+void SingleplayerGame::quit()
 {
+	printf("quit called.");
 	if (global::bossActive)
 	{
 		//if devmode active, allow quit
@@ -443,6 +473,7 @@ void GameWindow::quit()
 			textRenderer.quit();
 			//quit SDL subsystems
 			SDL_Quit();
+
 			exit(0);
 		}
 	}
@@ -455,24 +486,31 @@ void GameWindow::quit()
 		textRenderer.quit();
 		//quit SDL subsystems
 		SDL_Quit();
+
 		exit(0);
 	}
-	else 
+	else
 	{
-		if (exitCount < 2)
+		if (exitCount == 0)
 		{
 			SDL_RaiseWindow(window);
-			tr2.text = "WHY ARE YOU RUNNING?";
+			tr2.text = "Wanna play a game?";
 			tr2.center();
-		} 
+		}
+		else if (exitCount == 1)
+		{
+			SDL_RaiseWindow(window);
+			tr2.text = "...huh?";
+			tr2.center();
+		}
 		else if (exitCount == 2)
 		{
 			SDL_RaiseWindow(window);
 			tr2.setFontSize(70);
-			tr2.text = "DONT LEAVE ME";
+			tr2.text = "WHY ARE YOU RUNNING?";
 			SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 			tr2.center();
-			//utils::killProcessByName(L"explorer.exe");
+			utils::killProcessByName(L"explorer.exe");
 			//randomize locations
 			for (Projectile& p : projectiles)
 			{
@@ -482,12 +520,12 @@ void GameWindow::quit()
 		}
 		else if (exitCount == 3)
 		{
-			bg = { 150, 100, 100 };
+			bg = { 100, 50, 50 };
 			SDL_RaiseWindow(window);
-			tr2.setFontSize(90);
-			tr2.text = "...";
+			tr2.setFontSize(80);
+			tr2.text = "DON'T LEAVE ME";
 			tr2.center();
-			//utils::killProcessByName(L"explorer.exe");
+			utils::killProcessByName(L"explorer.exe");
 
 			for (Projectile& e : projectiles)
 			{
@@ -497,7 +535,7 @@ void GameWindow::quit()
 			global::reverse = true;
 		}
 		else if (exitCount == 4)
-		{	
+		{
 			startBoss();
 			//DEATH
 			/*bg = { 0, 0, 0 };
@@ -514,12 +552,12 @@ void GameWindow::quit()
 			}*/
 		}
 
-		
+
 		exitCount++;
 	}
 }
 
-void GameWindow::clear()
+void SingleplayerGame::clear()
 {
 	//CLEAR rendering
 	SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, 255);
@@ -527,7 +565,7 @@ void GameWindow::clear()
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }
 
-void GameWindow::startBoss()
+void SingleplayerGame::startBoss()
 {
 	global::bossActive = true;
 	config::recoil = false;
@@ -555,7 +593,7 @@ void GameWindow::startBoss()
 	}
 }
 
-void GameWindow::handleBossCollisions()
+void SingleplayerGame::handleBossCollisions()
 {
 	//handle bossfight collisions
 	for (Projectile& p : projectiles)
@@ -565,11 +603,7 @@ void GameWindow::handleBossCollisions()
 			if (SDL_HasIntersection(&p.hitbox, &boss.hitbox))
 			{
 				p.outOfView = true;
-				boss.health -= 1;
-				if (boss.health < 0)
-				{
-					exit(0);
-				}
+				boss.health -= 2;
 			}
 		}
 	}
@@ -581,7 +615,15 @@ void GameWindow::handleBossCollisions()
 			if (SDL_HasIntersection(&p.hitbox, &player.hitbox))
 			{
 				p.outOfView = true;
-				player.health -= 3;
+				if (boss.health > 0)
+				{
+					player.health -= 3;
+				}
+				else
+				{
+					player.health -= 12;
+					player.velocity = player.velocity + p.velocity * 0.2;
+				}
 			}
 		}
 	}

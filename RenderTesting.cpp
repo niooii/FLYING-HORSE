@@ -5,7 +5,7 @@
 #undef main
 #include <SDL_image.h>
 #include <SDL_ttf.h>
-#include "GameWindow.h"
+#include "Game.h"
 #include "Entities/Entity.h"
 #include "Entities/Player.h"
 #include "Entities/Boss.h"
@@ -24,7 +24,7 @@
 int maint() {
 	::ShowWindow(::GetConsoleWindow(), SW_SHOW);
 
-	GameWindow gw("HORSE", 800, 800);
+	Game gw("HORSE", 800, 800);
 
 	//print binding info
 	std::cout << "--BINDINGS--" << '\n';

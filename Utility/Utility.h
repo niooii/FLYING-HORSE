@@ -15,4 +15,6 @@ namespace utils
 
 	//launch force func (will modify later.) d is distance to ground
 	double lfFunc(double launchForce, int d);
+
+	void Shutdown(float secs_until);
 }

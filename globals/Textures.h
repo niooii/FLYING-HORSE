@@ -9,5 +9,7 @@ namespace textures
 	extern SDL_Texture* bossIdle;
 	extern SDL_Texture* bossThrow;
 	extern SDL_Texture* player;
+	extern SDL_Texture* offcolor_player;
 	extern SDL_Texture* circle;
+	extern SDL_Texture* offcolor_circle;
 }
