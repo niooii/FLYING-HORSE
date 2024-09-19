@@ -8,6 +8,8 @@
 #include "globals/global.h"
 #include "globals/Textures.h"
 
+class SingleplayerGame;
+
 struct Face {
 	std::vector<int> vertexIndices;
 };
@@ -15,6 +17,7 @@ struct Face {
 class Polyhedron
 {
 protected:
+	SingleplayerGame* inst;
 	SDL_Renderer* renderer;
 	winfo* info;
 
@@ -34,7 +37,7 @@ public:
 	boolean pointsOnly{ false };
 	boolean showTexture{ true };
 	Polyhedron();
-	Polyhedron(winfo* info, SDL_Renderer* renderer);
+	Polyhedron(SingleplayerGame* inst, winfo* info, SDL_Texture* tex, SDL_Renderer* renderer);
 	void connectPoints(Vector3 start, Vector3 end, double interval);
 	
 	SDL_FPoint center;

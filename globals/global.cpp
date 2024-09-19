@@ -11,7 +11,7 @@ namespace global
 	bool bossActive{ false };
 	bool hitByUlt{ false };
 
-	bool devmode{ false };
+	bool devmode{ true };
 	bool startBoss{ false };
 	bool infhp{ false };
 }

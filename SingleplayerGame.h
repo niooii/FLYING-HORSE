@@ -52,7 +52,7 @@ private:
 	void renderBoss();
 	void handleBossCollisions();
 
-	Dodecahedron d{ nullptr, nullptr };
+	//Dodecahedron d{ nullptr, nullptr, nullptr };
 
 public:
 	SDL_Window* window;
@@ -67,6 +67,7 @@ public:
 
 	SingleplayerGame(const char* title, Uint16 width, Uint16 height);
 	~SingleplayerGame();
+	void flashColor(SDL_Color target_color);
 	void addEntity(Projectile& entity);
 	//void addEntity(Player& player);
 	//void addEntity(Boss& boss);

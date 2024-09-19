@@ -1,5 +1,30 @@
 #include "SingleplayerGame.h"
 
+#define DAMAGE 5
+
+float red_multiplier = 1;
+float green_multiplier = 1;
+float blue_multiplier = 1;
+
+float target_rm = 1;
+float target_gm = 1;
+float target_bm = 1;
+
+float flash_lerp_t = 0;
+
+static float __lerp(float start, float end, float t)
+{
+	return start * (1 - t) + end * t;
+}
+
+void SingleplayerGame::flashColor(SDL_Color target_color)
+{
+	target_rm = (float)target_color.r / bg.r;
+	target_gm = (float)target_color.g / bg.g;
+	target_bm = (float)target_color.b / bg.b;
+	flash_lerp_t = 0;
+}
+
 SingleplayerGame::SingleplayerGame(const char* title, Uint16 width, Uint16 height)
 {
 	info.w = width;
@@ -24,16 +49,18 @@ SingleplayerGame::SingleplayerGame(const char* title, Uint16 width, Uint16 heigh
 	//initialize game textures
 	textures::redStar = utils::loadTexture(renderer, "Textures/redStar.png");
 	textures::purpleStar = utils::loadTexture(renderer, "Textures/purpleStar.png");
+	textures::greenStar = utils::loadTexture(renderer, "Textures/greenStar.png");
 	textures::bossIdle = utils::loadTexture(renderer, "Textures/bossIdle.png");
 	textures::bossThrow = utils::loadTexture(renderer, "Textures/bossThrow.png");
+	textures::bossFinal = utils::loadTexture(renderer, "Textures/bossFinal.png");
 	textures::player = utils::loadTexture(renderer, "Textures/player.png");
 	textures::offcolor_player = utils::loadTexture(renderer, "Textures/offcolor_player.png");
 	textures::circle = utils::loadTexture(renderer, "Textures/circle.png");
 	textures::offcolor_circle = utils::loadTexture(renderer, "Textures/offcolor_circle.png");
 
 	//create player and boss objects
-	player = Player(textures::player, renderer, &info, 200, 200);
-	boss = Boss(textures::bossIdle, renderer, &info, 200, 200);
+	player = Player(this, textures::player, renderer, &info, 200, 200);
+	boss = Boss(this, textures::bossIdle, renderer, &info, 200, 200);
 }
 
 SingleplayerGame::~SingleplayerGame()
@@ -78,6 +105,18 @@ void SingleplayerGame::render()
 	info.deltaTime = 0.001 * ((NOW - LAST) * 1000 / (double)SDL_GetPerformanceFrequency());
 	if (info.deltaTime > 100)
 		info.deltaTime = 0;
+
+	
+	const float rate_of_decay = 4;
+	flash_lerp_t += info.deltaTime * 4;
+	if (flash_lerp_t > 1)
+	{
+		flash_lerp_t = 1;
+	}
+
+	red_multiplier = __lerp(target_rm, 1, flash_lerp_t);
+	green_multiplier = __lerp(target_gm, 1, flash_lerp_t);
+	blue_multiplier = __lerp(target_bm, 1, flash_lerp_t);
 
 	SDL_GetMouseState(&info.mX, &info.mY);
 
@@ -200,7 +239,7 @@ void SingleplayerGame::handleRawInput()
 	if ((SDL_GetMouseState(&mouseX, &mouseY) & SDL_BUTTON_LMASK) && timer.elapsed() > (global::bossActive ? 0.05 : 0.01))
 	{
 		timer.reset();
-		Projectile projectile(textures::circle, renderer, &info, player.isFlipped ? player.x : player.x + player.size.w, player.y);
+		Projectile projectile(this, textures::circle, renderer, &info, player.isFlipped ? player.x : player.x + player.size.w, player.y);
 
 		projectile.x = projectile.x - projectile.size.w / 2.0;
 
@@ -272,10 +311,10 @@ void SingleplayerGame::handleEvents()
 			{
 				if (global::bossActive)
 				{
-					//a worthy punishment. (200px is projectile size to be safe)
+					// a worthy punishment. (200px is projectile size to be safe)
 					for (int i = 0; i < 6; i++)
-						boss.Pulse(rand() % (info.w - 200) + 100, rand() % (info.h - 150) + 75);
-					tr2.text = "STAY";
+						boss.Pulse(rand() % (info.w - 200) + 100, rand() % (info.h - 150) + 75, 0, 15, textures::redStar);
+					tr2.text = "PLEASE STAY.";
 					tr2.setFontSize(120);
 					tr2.center();
 					triedLeaving = true;
@@ -367,7 +406,7 @@ void SingleplayerGame::renderBoss()
 {
 	//kidnap user
 	SDL_RaiseWindow(window);
-	if (player.health <= 0)
+	if (player.health <= 0 && player.health != -2147483648)
 	{
 		bg = { 0, 0, 0 };
 		tr2.text = "MEET YOUR MISERABLE END.";
@@ -378,9 +417,7 @@ void SingleplayerGame::renderBoss()
 		SDL_RenderPresent(renderer);
 		if (!global::devmode)
 		{
-			system("C:\\windows\\system32\\shutdown /r /t 5\n\n");
-			exit(0);
-			//system("C:\\windows\\system32\\shutdown /r /t 3\n\n");
+			utils::Shutdown(5);
 			//
 		}
 		return;
@@ -405,7 +442,6 @@ void SingleplayerGame::renderBoss()
 		}
 	}
 
-
 	//render players
 
 	player.update();
@@ -427,20 +463,61 @@ void SingleplayerGame::renderBoss()
 
 	if (boss.health <= 0)
 	{
+		if (over)
+		{
+			global::allowedQuit = true;
+			quit();
+		}
+	}
+
+	if (boss.over)
+	{
 		if (!over)
 		{
 			over = true;
+
 			SDL_SetWindowFullscreen(window, 0);
 			SDL_SetWindowSize(window, display.w, display.h);
 			SDL_SetWindowBordered(window, SDL_FALSE);
 		}
 		SDL_SetWindowPosition(window, 4 - (rand() % 8), 4 - (rand() % 8));
+		tr2.setUseCenteredCoords(true);
+		tr2.x = info.w / 2;
+		tr2.y = info.h / 2 - info.h * 0.2;
 		tr2.text = "YOU THINK YOU HAVE WON YOUR FREEDOM?";
 		tr2.regenerateTexture();
 		tr2.setColor(200, 50, 50);
 		tr2.setFontSize(80);
-		tr2.center();
 		tr2.renderText();
+
+		// check collision between our projectils and boss
+		//printf("looping through %d p_boss bruh", boss.projectiles.size());
+		for (auto& p : projectiles)
+		{
+			if (p.outOfView)
+			{
+				continue;
+			}
+			for (auto& p_boss : boss.projectiles)
+			{
+				if (p_boss.outOfView)
+				{
+					continue;
+				}
+				if (SDL_HasIntersection(&p.hitbox, &p_boss.hitbox) == SDL_TRUE)
+				{
+					p.outOfView = true;
+					p_boss.outOfView = true;
+				}
+			}
+		}
+	}
+
+	if (global::hitByUlt)
+	{
+		bg.r = 40;
+		bg.g = 40;
+		bg.b = 40;
 	}
 
 	SDL_RenderPresent(renderer);
@@ -456,8 +533,8 @@ void SingleplayerGame::quit()
 		{
 			//a worthy punishment. (200px is projectile size to be safe)
 			for (int i = 0; i < 5; i++)
-				boss.Pulse(rand() % (info.w - 200) + 100, rand() % (info.h - 150) + 75);
-			tr2.text = "STAY";
+				boss.Pulse(rand() % (info.w - 200) + 100, rand() % (info.h - 150) + 75, 0, 15, textures::redStar);
+			tr2.text = "PLEASE DON'T LEAVE.";
 			tr2.setFontSize(120);
 			tr2.center();
 			triedLeaving = true;
@@ -560,7 +637,7 @@ void SingleplayerGame::quit()
 void SingleplayerGame::clear()
 {
 	//CLEAR rendering
-	SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, 255);
+	SDL_SetRenderDrawColor(renderer, bg.r * red_multiplier, bg.g * green_multiplier, bg.b * blue_multiplier, 255);
 	SDL_RenderClear(renderer); //clear screen w white color
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }
@@ -603,7 +680,7 @@ void SingleplayerGame::handleBossCollisions()
 			if (SDL_HasIntersection(&p.hitbox, &boss.hitbox))
 			{
 				p.outOfView = true;
-				boss.health -= 2;
+				boss.health -= DAMAGE;
 			}
 		}
 	}
@@ -615,13 +692,15 @@ void SingleplayerGame::handleBossCollisions()
 			if (SDL_HasIntersection(&p.hitbox, &player.hitbox))
 			{
 				p.outOfView = true;
-				if (boss.health > 0)
+				if (!boss.over)
 				{
 					player.health -= 3;
+					flashColor({120, 50, 50});
 				}
 				else
 				{
 					player.health -= 12;
+					flashColor({ 60, 0, 0 });
 					player.velocity = player.velocity + p.velocity * 0.2;
 				}
 			}
@@ -633,6 +712,7 @@ void SingleplayerGame::handleBossCollisions()
 		if (SDL_HasIntersection(&p.hitbox, &player.hitbox) && borderTimer.elapsed() > 0.02)
 		{
 			borderTimer.reset();
+			flashColor({ 80, 0, 0 });
 			player.health -= 1;
 		}
 	}
@@ -644,6 +724,7 @@ void SingleplayerGame::handleBossCollisions()
 		collideDamageTimer.reset();
 		player.velocity.x = -player.velocity.x;
 		player.velocity.y = -player.velocity.y;
+		flashColor({ 0, 0, 0 });
 		player.health -= 200;
 	}
 }

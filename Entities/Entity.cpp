@@ -1,18 +1,20 @@
 #include "Entity.h"
 #include <iostream>
+#include "SingleplayerGame.h"
 
 Entity::Entity()
 {
 
 }
 
-Entity::Entity(SDL_Texture* texture, SDL_Renderer* renderer, winfo* info, double x, double y) {
-	//be careful if texture gets destroyed, pointer wont point to anything
+Entity::Entity(SingleplayerGame* inst, SDL_Texture* texture, SDL_Renderer* renderer, winfo* info, double x, double y) {
+	//be careful if texture gets destroyed
 	this->texture = texture;
 	this->x = x;
 	this->y = y;
 	this->info = info;
 	this->renderer = renderer;
+	this->inst = inst;
 	SDL_QueryTexture(texture, NULL, NULL, &size.w, &size.h);
 }
 

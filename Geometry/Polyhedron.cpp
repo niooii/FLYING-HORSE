@@ -6,8 +6,10 @@ Polyhedron::Polyhedron()
     this->renderer = nullptr;
 }
 
-Polyhedron::Polyhedron(winfo* info, SDL_Renderer* renderer)
+Polyhedron::Polyhedron(SingleplayerGame* inst, winfo* info, SDL_Texture* tex, SDL_Renderer* renderer)
 {
+    this->inst = inst;
+    this->texture = tex;
     this->info = info;
     this->renderer = renderer;
 }
@@ -111,6 +113,7 @@ void Polyhedron::renderPoints(SDL_Color color)
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     for (Vector3& p : points)
     {
+        
         SDL_RenderDrawPoint(renderer, (p.x * rScale) + roX, (p.y * rScale) + roY);
     }
 }
@@ -119,7 +122,7 @@ void Polyhedron::renderPoints(SDL_Color color)
 void Polyhedron::updatePr()
 {
     projectiles.clear();
-    Projectile pr = Projectile(textures::purpleStar, renderer, info, 0, 0);
+    Projectile pr = Projectile(inst, texture, renderer, info, 0, 0);
     pr.friction = false;
     pr.collisions = false;
     pr.acceleration = { 0, 0 };

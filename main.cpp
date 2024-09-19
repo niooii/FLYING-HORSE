@@ -38,17 +38,16 @@ int main()
 	std::cout << "Toggle recoil (jetpack):    T" << '\n';
 	std::cout << "Toggle output (less lag):   O" << '\n';
 	std::cout << "Exit:                       ESC" << '\n' << '\n';
-
-	// singleplayer release
+	
+	// std::cout << "How to start? (1: client | 2: server | 3: singleplayer)" << '\n';
 	SingleplayerGame gw("HORSE", 800, 800);
-	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
+	// ::ShowWindow(::GetConsoleWindow(), SW_SHOW);
 	while (true) {
 		gw.clear();
 		gw.render();
 		gw.handleEvents();
 	}
-
-	std::cout << "How to start? (1: client | 2: server)" << '\n';
+	return 0;
 	for (int i = 0; i < 2; i++)
 	{
 		std::cout << "your chocie: ";
@@ -58,8 +57,8 @@ int main()
 		{
 		case 1:
 		{
-			Game gw("HORSE", 800, 800);
-			::ShowWindow(::GetConsoleWindow(), SW_HIDE);
+			//Game gw("HORSE", 800, 800);
+			// ::ShowWindow(::GetConsoleWindow(), SW_SHOW);
 			while (true) {
 				gw.clear();
 				gw.render();
@@ -72,6 +71,18 @@ int main()
 			Server ss(25555);
 			ss.Run();
 			break;
+		}
+		case 3:
+		{
+			// singleplayer release
+			SingleplayerGame gw("HORSE", 800, 800);
+			// ::ShowWindow(::GetConsoleWindow(), SW_SHOW);
+			while (true) {
+				gw.clear();
+				gw.render();
+				gw.handleEvents();
+			}
+
 		}
 		default:
 		{

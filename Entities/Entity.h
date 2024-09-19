@@ -13,12 +13,14 @@
 class Player;
 class Projectile;
 class Boss;
+class SingleplayerGame;
 
 class Entity {
 protected:
 	SDL_Rect dest;
 	SDL_Renderer* renderer;
 	winfo* info;
+	SingleplayerGame* inst;
 
 public:
 	SDL_Rect hitbox;
@@ -33,7 +35,7 @@ public:
 	Vector2 velocity{};
 	SDL_Texture* texture = nullptr;
 	Entity();
-	Entity(SDL_Texture* texture, SDL_Renderer* renderer, winfo* info, double x, double y);
+	Entity(SingleplayerGame* inst, SDL_Texture* texture, SDL_Renderer* renderer, winfo* info, double x, double y);
 	//moves simulation of entity forward by some amount of time (undecided)
 	void update();
 	void render();
