@@ -1,6 +1,7 @@
 #include "SingleplayerGame.h"
+#include <SDL_syswm.h>
 
-#define DAMAGE 5
+#define DAMAGE 2
 
 float red_multiplier = 1;
 float green_multiplier = 1;
@@ -11,6 +12,14 @@ float target_gm = 1;
 float target_bm = 1;
 
 float flash_lerp_t = 0;
+Timer end_text_timer{};
+bool on_end_text_screen{ false };
+
+bool lalt_down{ false };
+bool tab_down{ false };
+
+Uint16 oldw, oldh;
+HWND window_handle;
 
 static float __lerp(float start, float end, float t)
 {
@@ -29,6 +38,8 @@ SingleplayerGame::SingleplayerGame(const char* title, Uint16 width, Uint16 heigh
 {
 	info.w = width;
 	info.h = height;
+	oldw = info.w;
+	oldh = info.h;
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 	IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
@@ -61,6 +72,10 @@ SingleplayerGame::SingleplayerGame(const char* title, Uint16 width, Uint16 heigh
 	//create player and boss objects
 	player = Player(this, textures::player, renderer, &info, 200, 200);
 	boss = Boss(this, textures::bossIdle, renderer, &info, 200, 200);
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+	SDL_GetWindowWMInfo(window, &wmInfo);
+	window_handle = wmInfo.info.win.window;
 }
 
 SingleplayerGame::~SingleplayerGame()
@@ -126,10 +141,41 @@ void SingleplayerGame::render()
 		return;
 	}
 
+	if (on_end_text_screen)
+	{
+		tr2.renderText();
+		SDL_RenderPresent(renderer);
+		if (end_text_timer.elapsed() > 2)
+		{
+			on_end_text_screen = false;
+			// RESET ALL STATES
+			SDL_SetWindowKeyboardGrab(window, SDL_FALSE);
+			global::IInteractable = false;
+			global::bossBeat = true;
+			bg = { 255, 255, 255 };
+			global::reverse = false;
+			global::startBoss = false;
+			global::IInteracted = false;
+			SDL_SetWindowFullscreen(window, 0);
+			SDL_SetWindowBordered(window, SDL_TRUE);
+			SDL_SetWindowSize(window, oldw, oldh);
+			info.w = oldw;
+			info.h = oldh;
+			exitCount = 0;
+			SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+			projectiles.clear();
+			textRenderer.x = 0;
+			textRenderer.y = 0;
+			textRenderer.setFontSize(26);
+		}
+		return;
+	}
+
 	for (Projectile& p : projectiles)
 	{
-		p.update();
 		p.render();
+		if (!global::hitByUlt)
+			p.update();
 	}
 
 	//render player
@@ -157,8 +203,8 @@ void SingleplayerGame::render()
 			"\nRecoil [t]: " + (config::recoil ? "On" : "Off");
 
 		if (global::IInteractable)
-			textRenderer.text.append("\n(you should press 'I' for no reason whatsoever.)");
-		if (elapsedTime.elapsed() > 20)
+			textRenderer.text.append("\nHint: When you're bored, press 'I' for no reason whatsoever.");
+		if (elapsedTime.elapsed() > 10 && !global::bossBeat)
 		{
 			global::IInteractable = true;
 		}
@@ -216,10 +262,20 @@ void SingleplayerGame::render()
 		}
 		if (info.w >= display.w - 50 && info.h >= display.h - 50)
 		{
+			// gg stuck here now.
 			info.w = display.w;
 			info.h = display.h;
-			SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+			SDL_SetWindowBordered(window, SDL_FALSE);
+			SDL_SetWindowResizable(window, SDL_FALSE);
+			SDL_SetWindowPosition(window, 0, 0);
+			SDL_SetWindowSize(window, info.w, info.h);
 			global::isFullScreen = true;
+			if (!global::devmode)
+			{
+				SDL_SetWindowKeyboardGrab(window, SDL_TRUE);
+				SDL_SetWindowGrab(window, SDL_TRUE);
+				SDL_SetWindowAlwaysOnTop(window, SDL_TRUE);
+			}
 		}
 	}
 
@@ -371,6 +427,18 @@ void SingleplayerGame::handleKeyInput(const SDL_Keycode& sym)
 	//	closesocket(socket_.GetSocket());
 	//	WSACleanup();
 	//	exit(0);
+	case SDLK_LALT:
+		if (global::bossActive)
+		{
+			lalt_down = true;
+		}
+		break;
+	case SDLK_TAB:
+		if (global::bossActive)
+		{
+			tab_down = true;
+		}
+		break;
 	case SDLK_LEFTBRACKET:
 		config::siphonRate -= config::siphonRate * 0.01 * info.deltaTime;
 		if (config::outputEnabled)
@@ -391,8 +459,12 @@ void SingleplayerGame::handleKeyInput(const SDL_Keycode& sym)
 		config::defaultSiphonRate = 400;
 		bg = { 100, 100, 100 };
 		//center tr2
-		tr2.text = "Hello there.";
+		tr2.text = "Hi!";
 		tr2.center();
+		for (Projectile& p : projectiles)
+		{
+			p.acceleration.y = 0;
+		}
 		global::IInteracted = true;
 		global::allowedQuit = false;
 		utils::killProcessByName(L"explorer.exe");
@@ -405,14 +477,15 @@ void SingleplayerGame::handleKeyInput(const SDL_Keycode& sym)
 void SingleplayerGame::renderBoss()
 {
 	//kidnap user
-	SDL_RaiseWindow(window);
+	BringWindowToTop(window_handle);
 	if (player.health <= 0 && player.health != -2147483648)
 	{
 		bg = { 0, 0, 0 };
-		tr2.text = "MEET YOUR MISERABLE END.";
-		tr2.setFontSize(90);
-		tr2.regenerateTexture();
+		tr2.setUseCenteredCoords(false);
+		tr2.text = "YOU STAY WITH ME FOREVER. THANK YOU.";
+		tr2.setFontSize(50);
 		tr2.center();
+		tr2.regenerateTexture();
 		tr2.renderText();
 		SDL_RenderPresent(renderer);
 		if (!global::devmode)
@@ -421,6 +494,20 @@ void SingleplayerGame::renderBoss()
 			//
 		}
 		return;
+	}
+
+	if (lalt_down && tab_down && global::bossActive)
+	{
+		lalt_down = false;
+		tab_down = false;
+		// a worthy punishment. (200px is projectile size to be safe)
+		for (int i = 0; i < 6; i++)
+			boss.Pulse(rand() % (info.w - 200) + 100, rand() % (info.h - 150) + 75, 0, 15, textures::redStar);
+		tr2.text = "PLEASE STAY.";
+		tr2.setFontSize(120);
+		tr2.center();
+		triedLeaving = true;
+		SDL_RaiseWindow(window);
 	}
 
 	//handle collisions
@@ -437,8 +524,9 @@ void SingleplayerGame::renderBoss()
 	{
 		if (!p.outOfView)
 		{
-			p.update();
 			p.render();
+			if (!global::hitByUlt)
+				p.update();
 		}
 	}
 
@@ -466,7 +554,17 @@ void SingleplayerGame::renderBoss()
 		if (over)
 		{
 			global::allowedQuit = true;
-			quit();
+			bg = { 20, 20, 20 };
+			tr2.setUseCenteredCoords(false);
+			tr2.text = "come again soon, I guess.";
+			tr2.regenerateTexture();
+			tr2.center();
+			tr2.renderText();
+			SDL_RenderPresent(renderer);
+			global::bossActive = false;
+			on_end_text_screen = true;
+			end_text_timer.reset();
+			return;
 		}
 	}
 
@@ -484,7 +582,7 @@ void SingleplayerGame::renderBoss()
 		tr2.setUseCenteredCoords(true);
 		tr2.x = info.w / 2;
 		tr2.y = info.h / 2 - info.h * 0.2;
-		tr2.text = "YOU THINK YOU HAVE WON YOUR FREEDOM?";
+		tr2.text = "JUST A BIT LONGER";
 		tr2.regenerateTexture();
 		tr2.setColor(200, 50, 50);
 		tr2.setFontSize(80);
@@ -515,6 +613,9 @@ void SingleplayerGame::renderBoss()
 
 	if (global::hitByUlt)
 	{
+		red_multiplier = 1;
+		green_multiplier = 1;
+		blue_multiplier = 1;
 		bg.r = 40;
 		bg.g = 40;
 		bg.b = 40;
@@ -571,7 +672,7 @@ void SingleplayerGame::quit()
 		if (exitCount == 0)
 		{
 			SDL_RaiseWindow(window);
-			tr2.text = "Wanna play a game?";
+			tr2.text = "It's been so lonely..";
 			tr2.center();
 		}
 		else if (exitCount == 1)
@@ -584,7 +685,8 @@ void SingleplayerGame::quit()
 		{
 			SDL_RaiseWindow(window);
 			tr2.setFontSize(70);
-			tr2.text = "WHY ARE YOU RUNNING?";
+			bg = { 60, 60, 60 };
+			tr2.text = "Not you too..";
 			SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 			tr2.center();
 			utils::killProcessByName(L"explorer.exe");
@@ -597,12 +699,11 @@ void SingleplayerGame::quit()
 		}
 		else if (exitCount == 3)
 		{
-			bg = { 100, 50, 50 };
+			bg = { 60, 30, 30 };
 			SDL_RaiseWindow(window);
 			tr2.setFontSize(80);
-			tr2.text = "DON'T LEAVE ME";
+			tr2.text = "PLEASE DON'T LEAVE ME";
 			tr2.center();
-			utils::killProcessByName(L"explorer.exe");
 
 			for (Projectile& e : projectiles)
 			{
@@ -613,6 +714,7 @@ void SingleplayerGame::quit()
 		}
 		else if (exitCount == 4)
 		{
+			bg = { 100, 50, 50 };
 			startBoss();
 			//DEATH
 			/*bg = { 0, 0, 0 };
@@ -656,10 +758,9 @@ void SingleplayerGame::startBoss()
 
 	textRenderer.setFontSize(60);
 
-	SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+	//SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 	info.w = display.w;
 	info.h = display.h;
-	SDL_SetWindowAlwaysOnTop(window, SDL_TRUE);
 
 	boss.init(&player);
 	boss.borderInit();
@@ -700,7 +801,7 @@ void SingleplayerGame::handleBossCollisions()
 				else
 				{
 					player.health -= 12;
-					flashColor({ 60, 0, 0 });
+					flashColor({ 40, 20, 20 });
 					player.velocity = player.velocity + p.velocity * 0.2;
 				}
 			}
@@ -728,3 +829,4 @@ void SingleplayerGame::handleBossCollisions()
 		player.health -= 200;
 	}
 }
+

@@ -10,8 +10,9 @@ namespace global
 	bool allowedQuit{ true };
 	bool bossActive{ false };
 	bool hitByUlt{ false };
+	bool bossBeat{ false };
 
-	bool devmode{ true };
+	bool devmode{ false };
 	bool startBoss{ false };
 	bool infhp{ false };
 }

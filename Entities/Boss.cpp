@@ -407,7 +407,7 @@ void Boss::Pulse()
 
 void Boss::EndingSpiral()
 {
-	SDL_SetTextureColorMod(textures::redStar, 100 * abs(sinf(spiral_angle_inc.elapsed() * 3)), 0, 0);
+	SDL_SetTextureColorMod(textures::redStar, 255 * abs(sinf(spiral_angle_inc.elapsed() * 3)), 0, 0);
 	Spiral(x + size.w / 2.0, y + size.h / 2.0, textures::redStar);
 }
 
@@ -486,74 +486,80 @@ void Boss::render(SDL_Renderer* renderer)
 		int beamDmg = 50;
 		if (state == boss::state::ThrowingBeam)
 		{
-			SDL_SetTextureColorMod(textures::purpleStar, beam1_col_mult.x, beam1_col_mult.y, beam1_col_mult.z);
-			beams.move(beam1_pos.x, beam1_pos.y);
 			beams.render();
-			float rot_amount = 0.2 * info->deltaTime * beam1_rot_speed_mult;
-			beams.rotate(0, 0, rot_amount);
-			if (beam1_pulse_timer.elapsed() > beam_pulse_rate)
+			if (!global::hitByUlt)
 			{
-				beam1_pulse_timer.reset();
-				Pulse(beams.center.x - 25, beams.center.y - 25, 10, -15, textures::purpleStar);
-			}
-			for (Projectile const& p : beams.projectiles)
-			{
-				if (SDL_HasIntersection(&player->hitbox, &p.hitbox) && beamDamageTimer.elapsed() > tickduration)
+				SDL_SetTextureColorMod(textures::purpleStar, beam1_col_mult.x, beam1_col_mult.y, beam1_col_mult.z);
+				beams.move(beam1_pos.x, beam1_pos.y);
+				float rot_amount = 0.2 * info->deltaTime * beam1_rot_speed_mult;
+				beams.rotate(0, 0, rot_amount);
+				if (beam1_pulse_timer.elapsed() > beam_pulse_rate)
 				{
-					beam1_col_mult = {0, 0, 0};
-					beamDamageTimer.reset();
-					inst->flashColor({128, 43, 226});
-					beam1_rot_speed_mult = 6.f;
-					player->health -= beamDmg;
+					beam1_pulse_timer.reset();
+					Pulse(beams.center.x - 25, beams.center.y - 25, 5, 10, textures::purpleStar);
+				}
+				for (Projectile const& p : beams.projectiles)
+				{
+					if (SDL_HasIntersection(&player->hitbox, &p.hitbox) && beamDamageTimer.elapsed() > tickduration)
+					{
+						beam1_col_mult = { 0, 0, 0 };
+						beamDamageTimer.reset();
+						inst->flashColor({ 128, 43, 226 });
+						beam1_rot_speed_mult = 6.f;
+						player->health -= beamDmg;
+					}
 				}
 			}
 		}
 		else
 		{
-			SDL_SetTextureColorMod(textures::purpleStar, beam1_col_mult.x, beam1_col_mult.y, beam1_col_mult.z);
-			SDL_SetTextureColorMod(textures::greenStar, beam2_col_mult.x, beam2_col_mult.y, beam2_col_mult.z);
-			beams.move(beam1_pos.x, beam1_pos.y);
 			beams.render();
-			float rot1_amount = 0.2 * info->deltaTime * beam1_rot_speed_mult;
-			beams.rotate(0, 0, rot1_amount);
-			if (beam1_pulse_timer.elapsed() > beam_pulse_rate)
-			{
-				beam1_pulse_timer.reset();
-				Pulse(beams.center.x - 25, beams.center.y - 25, 10, -15, textures::purpleStar);
-			}
-			for (Projectile const& p : beams.projectiles)
-			{
-				if (SDL_HasIntersection(&player->hitbox, &p.hitbox) && beamDamageTimer.elapsed() > tickduration)
-				{
-					beam1_col_mult = { 0, 0, 0 };
-					beamDamageTimer.reset();
-					inst->flashColor({ 128, 43, 226 });
-					beam1_rot_speed_mult = 6.f;
-					player->health -= beamDmg;
-				}
-			}
-
-			beams2.move(beam2_pos.x, beam2_pos.y);
 			beams2.render();
-			float rot2_amount = 0.2 * info->deltaTime * beam2_rot_speed_mult;
-			beams2.rotate(rot2_amount, rot2_amount, rot2_amount);
-			// this is kinda unfair ngl
-			/*if (beam2_pulse_timer.elapsed() > beam_pulse_rate)
+			if (!global::hitByUlt)
 			{
-				beam2_pulse_timer.reset();
-				Pulse(beams2.center.x - 25, beams2.center.y - 25, 10, -15, textures::greenStar);
-			}*/
-			for (Projectile const& p : beams2.projectiles)
-			{
-				if (SDL_HasIntersection(&player->hitbox, &p.hitbox) && beam2DamageTimer.elapsed() > tickduration)
+				SDL_SetTextureColorMod(textures::purpleStar, beam1_col_mult.x, beam1_col_mult.y, beam1_col_mult.z);
+				SDL_SetTextureColorMod(textures::greenStar, beam2_col_mult.x, beam2_col_mult.y, beam2_col_mult.z);
+				beams.move(beam1_pos.x, beam1_pos.y);
+				float rot1_amount = 0.2 * info->deltaTime * beam1_rot_speed_mult;
+				beams.rotate(0, 0, rot1_amount);
+				if (beam1_pulse_timer.elapsed() > beam_pulse_rate)
 				{
-					beam2_col_mult = { 0, 0, 0 };
-					beam2DamageTimer.reset();
-					beam2_pos.x = rand() % (info->w - size.w * 2) + size.w;
-					beam2_pos.y = rand() % (info->h - size.h * 2) + size.h;
-					inst->flashColor({ 144, 238, 144 });
-					beam2_rot_speed_mult = 6.f;
-					player->health -= beamDmg * 1.2;
+					beam1_pulse_timer.reset();
+					Pulse(beams.center.x - 25, beams.center.y - 25, 5, 10, textures::purpleStar);
+				}
+				for (Projectile const& p : beams.projectiles)
+				{
+					if (SDL_HasIntersection(&player->hitbox, &p.hitbox) && beamDamageTimer.elapsed() > tickduration)
+					{
+						beam1_col_mult = { 0, 0, 0 };
+						beamDamageTimer.reset();
+						inst->flashColor({ 128, 43, 226 });
+						beam1_rot_speed_mult = 6.f;
+						player->health -= beamDmg;
+					}
+				}
+
+				beams2.move(beam2_pos.x, beam2_pos.y);
+				float rot2_amount = 0.2 * info->deltaTime * beam2_rot_speed_mult;
+				beams2.rotate(rot2_amount * 0.8, rot2_amount * 0.64, rot2_amount);
+				// this is kinda unfair ngl
+				/*if (beam2_pulse_timer.elapsed() > beam_pulse_rate)
+				{
+					beam2_pulse_timer.reset();
+					Pulse(beams2.center.x - 25, beams2.center.y - 25, 10, -15, textures::greenStar);
+				}*/
+				for (Projectile const& p : beams2.projectiles)
+				{
+					if (SDL_HasIntersection(&player->hitbox, &p.hitbox) && beam2DamageTimer.elapsed() > tickduration)
+					{
+						beam2_col_mult = { 0, 0, 0 };
+						beam2DamageTimer.reset();
+						beam2_pos.x = rand() % (info->w - size.w * 2) + size.w;
+						beam2_pos.y = rand() % (info->h - size.h * 2) + size.h;
+						inst->flashColor({ 144, 238, 144 });
+						beam2_rot_speed_mult = 6.f;
+						player->health -= beamDmg * 1.2;
+					}
 				}
 			}
 		}
@@ -564,21 +570,27 @@ void Boss::render(SDL_Renderer* renderer)
 	{
 		if (!p.outOfView)
 		{
-			p.rotation += 0.1;
-			p.update();
 			p.render();
-			if (constants::renderHitboxes)
-				SDL_RenderDrawRect(renderer, &p.hitbox);
+			if (!global::hitByUlt)
+			{
+				p.rotation += 200 * info->deltaTime;
+				p.update();
+				if (constants::renderHitboxes)
+					SDL_RenderDrawRect(renderer, &p.hitbox);
+			}
 		}
 	}
 
 	for (Projectile& p : border)
 	{
-		p.rotation -= 0.05;
-		p.update();
 		p.render();
-		if (constants::renderHitboxes)
-			SDL_RenderDrawRect(renderer, &p.hitbox);
+		if (!global::hitByUlt)
+		{
+			p.rotation -= 90 * info->deltaTime;
+			p.update();
+			if (constants::renderHitboxes)
+				SDL_RenderDrawRect(renderer, &p.hitbox);
+		}
 	}
 	
 	dest.x = x;
