@@ -102,8 +102,8 @@ void Projectile::update()
 	if (isAtFloor || isAtCeiling)
 	{
 		//if reverse mode, no collision!
-			velocity.y = -velocity.y;
-			velocity.y -= (0.65 * velocity.y);
+		velocity.y = -velocity.y;
+		velocity.y -= (0.65 * velocity.y);
 	}
 	else
 	{

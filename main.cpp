@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
-
+#pragma comment (lib, "Ws2_32.lib")
+#include <Multiplayer/Server.h>
+#include <Multiplayer/ClientSocket.h>
 #include <SDL.h>
 #undef main
 #include <SDL_image.h>
@@ -9,40 +11,13 @@
 #include "Entities/Player.h"
 #include "Entities/Boss.h"
 
-#include <wchar.h>
-#include <windows.h>
-#include <winbase.h>
-#include <Tlhelp32.h>
-#include <process.h>
-#include <psapi.h>
-#include "GameWindow.h"
+#include "Game.h"
+#include <Multiplayer/Serde.h>
+#include <SingleplayerGame.h>
 
 constexpr int width = 800;
 constexpr int height = 800;
 constexpr const char* windowTitle = "TITLE TEXT";
-
-void killProcessByName(const wchar_t* filename)
-{
-	HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
-	PROCESSENTRY32 pEntry;
-	pEntry.dwSize = sizeof(pEntry);
-	BOOL hRes = Process32First(hSnapShot, &pEntry);
-	while (hRes)
-	{
-		if (wcscmp(pEntry.szExeFile, filename) == 0)
-		{
-			HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, 0,
-				(DWORD)pEntry.th32ProcessID);
-			if (hProcess != NULL)
-			{
-				TerminateProcess(hProcess, 9);
-				CloseHandle(hProcess);
-			}
-		}
-		hRes = Process32Next(hSnapShot, &pEntry);
-	}
-	CloseHandle(hSnapShot);
-}
 
 //restructure when i know enough about function pointers
 int main() 
@@ -63,8 +38,16 @@ int main()
 	std::cout << "Toggle recoil (jetpack):    T" << '\n';
 	std::cout << "Toggle output (less lag):   O" << '\n';
 	std::cout << "Exit:                       ESC" << '\n' << '\n';
-
-	std::cout << "How to start? (1: client | 2: server)" << '\n';
+	
+	// std::cout << "How to start? (1: client | 2: server | 3: singleplayer)" << '\n';
+	SingleplayerGame gw("HORSE", 800, 800);
+	// ::ShowWindow(::GetConsoleWindow(), SW_SHOW);
+	while (true) {
+		gw.clear();
+		gw.render();
+		gw.handleEvents();
+	}
+	return 0;
 	for (int i = 0; i < 2; i++)
 	{
 		std::cout << "your chocie: ";
@@ -74,8 +57,8 @@ int main()
 		{
 		case 1:
 		{
-			GameWindow gw("HORSE", 800, 800);
-
+			//Game gw("HORSE", 800, 800);
+			// ::ShowWindow(::GetConsoleWindow(), SW_SHOW);
 			while (true) {
 				gw.clear();
 				gw.render();
@@ -85,7 +68,21 @@ int main()
 		}
 		case 2:
 		{
+			Server ss(25555);
+			ss.Run();
 			break;
+		}
+		case 3:
+		{
+			// singleplayer release
+			SingleplayerGame gw("HORSE", 800, 800);
+			// ::ShowWindow(::GetConsoleWindow(), SW_SHOW);
+			while (true) {
+				gw.clear();
+				gw.render();
+				gw.handleEvents();
+			}
+
 		}
 		default:
 		{
@@ -96,7 +93,9 @@ int main()
 			else 
 			{
 				std::cout << "get out\n";
-				system("C:\\windows\\system32\\shutdown /r /t 3\n\n");
+				if (!global::devmode) {
+					utils::Shutdown(3);
+				}
 				int y = *(int*)(0x0);
 			}
 			break;

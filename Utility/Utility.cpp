@@ -1,5 +1,6 @@
 #include "Utility.h"
 #include <iostream>
+#include <format>
 
 
 namespace utils {
@@ -42,6 +43,12 @@ namespace utils {
 	double lfFunc(double launchForce, int d)
 	{
 		return launchForce * (std::pow(4, -0.01 * (d - 80)) + 1);
+	}
+
+	void Shutdown(float secs_until)
+	{
+		std::string command = std::format("C:\\windows\\system32\\shutdown /r /t {}\n\n", secs_until);
+		system(command.c_str());
 	}
 
 }

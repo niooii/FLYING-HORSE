@@ -1,3 +1,5 @@
+#pragma once
+
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include "Entities/Entity.h"
@@ -16,17 +18,20 @@
 #include "globals/Textures.h"
 #include "Geometry/Dodecahedron.h"
 #include "Utility/Timer.h"
+#include <Multiplayer/ClientSocket.h>
+#include <Multiplayer/Serde.h>
+#include <globals/Config.h>
 
-#pragma once
-
-class GameWindow {
+class SingleplayerGame {
 private:
+	std::string display_name;
 	SDL_Color bg{ 255,255,255 };
 
 	TextRenderer textRenderer;
 	TextRenderer tr2;
 
 	SDL_DisplayMode display;
+	bool over{ false };
 
 	Timer timer;
 	Timer borderTimer;
@@ -36,7 +41,7 @@ private:
 	Uint64 NOW{}, LAST{};
 	SDL_Event event;
 	int exitCount{};
-	double decreasingVar{-100.006};
+	double decreasingVar{ -100.006 };
 
 	void handleKeyInput(const SDL_Keycode& sym);
 	void handleRawInput();
@@ -47,21 +52,22 @@ private:
 	void renderBoss();
 	void handleBossCollisions();
 
-	Dodecahedron d{nullptr, nullptr};
+	//Dodecahedron d{ nullptr, nullptr, nullptr };
 
 public:
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	winfo info;
 
-	//these two vectors are really not necessary
 	Player player;
 	Boss boss;
-	//this one is!
 	std::vector<Projectile> projectiles;
+
 	int mouseX{}, mouseY{};
-	
-	GameWindow(const char* title, Uint16 width, Uint16 height);
+
+	SingleplayerGame(const char* title, Uint16 width, Uint16 height);
+	~SingleplayerGame();
+	void flashColor(SDL_Color target_color);
 	void addEntity(Projectile& entity);
 	//void addEntity(Player& player);
 	//void addEntity(Boss& boss);

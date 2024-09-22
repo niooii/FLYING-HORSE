@@ -28,6 +28,7 @@ namespace global
 	extern bool allowedQuit;
 	extern bool bossActive;
 	extern bool hitByUlt;
+	extern bool bossBeat;
 
 	//developer
 	extern bool devmode;
